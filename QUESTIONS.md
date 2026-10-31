@@ -5,11 +5,8 @@ Nothing here blocks playing or deploying. Each item says what was chosen so Anmo
 ## Content
 
 1. **14 profiles, not 12.** The plan says "12 (more is better)". All 14 pass the content lint.
-2. **Profiles are 45–56 visible words** (counting name, handle, location, joined line and post times), below
-   the plan's 60–80 "reading budget". Shorter reads better on a phone and still spreads 6 facts across bio,
-   posts and a photo caption. The lint caps it at 80; posts can be lengthened if the game feels too easy.
-3. **Mira's photo post differs from the worked example.** None of the 18 avatars shows sneakers, so the
-   photo fact is "Painted my desk yellow" with the sunflower picture. The answer is still "Yellow".
+2. **Profiles are up to 69 visible words** (limit 110) and up to 43 fact words (limit 60). Room to add more noise text if the game feels too easy.
+3. **Mira matches the worked example again.** The new feed pack has a sneakers photo, so her photo fact is back to yellow sneakers.
 4. **"Bio" facts include the location row.** For most profiles the city appears in both the bio and the
    📍 row. The lint counts the 📍 row as part of the bio area.
 5. **Category granularity.** Wrong answers come from the whole category pool, so "Which dance practice ran
@@ -40,3 +37,10 @@ Nothing here blocks playing or deploying. Each item says what was chosen so Anmo
 14. **The e2e 20-run loop uses `?time=3`** to keep it to a few minutes. The first run per viewport (the one
     that takes screenshots) uses the real 10-second look.
 15. **Event date** is still open (from the plan). Nothing in the app depends on it.
+
+## Mixed feed update
+
+16. **Short screens hide noise.** At 390×844 and 1440×900 every profile shows noise cards. On a 375×667 phone
+    all noise cards can be hidden so the facts still fit without scrolling (the plan says hide noise first,
+    never a fact). The e2e only requires at least one noise card on screens ≥ 700px tall.
+17. **54 of the 63 feed images are used.** The rest are free for new profiles.

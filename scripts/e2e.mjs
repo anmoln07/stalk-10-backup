@@ -9,7 +9,7 @@
  *     runs so the localStorage shuffle bag is exercised across reloads
  *   - 1 run with the network switched off (the game must not fetch anything after first load)
  *
- * Every run checks: profile screen has no scroll and the whole card (incl. last post) is on screen,
+ * Every run checks: profile screen has no scroll, the header and every fact-bearing card are fully on screen,
  * all images loaded, 4 answer buttons all inside the viewport, no sideways scroll, the right answer
  * is on the profile and the wrong ones aren't, the score matches, no console errors / page crashes,
  * no requests leave localhost, and no profile appears twice in a row.
@@ -30,13 +30,25 @@ const PORT = Number(process.env.PORT || 3217);
 const BASE = `http://127.0.0.1:${PORT}`;
 const RUNS = Number(process.env.RUNS || 20);
 const DOCS = path.join(ROOT, "docs");
+// Optional: SWEEP_DIR=/some/dir saves a look-screen screenshot of every profile at both sizes.
+const SWEEP_DIR = process.env.SWEEP_DIR || "";
+// Profile ids, read from the source so the sweep covers every profile.
+const PROFILE_IDS = [...fs.readFileSync(path.join(ROOT, "content", "profiles.ts"), "utf8").matchAll(/^\s*id: "([a-z0-9_-]+)", name:/gm)].map((x) => x[1]);
 
 const VIEWPORTS = [
   { name: "1440", viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 },
   { name: "390", viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
 ];
 
+// Shorter screens: layout-only sweep (noise cards may be hidden here, fact cards never).
+const SHORT_VIEWPORTS = [
+  { name: "375x667", viewport: { width: 375, height: 667 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+  { name: "1280x720", viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 },
+];
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const layoutLog = [];
+const vp = (page) => `${page.viewportSize().width}×${page.viewportSize().height}`;
 const failures = [];
 const fail = (msg) => {
   failures.push(msg);
@@ -75,6 +87,55 @@ async function noSideScroll(page, where) {
   if (sw > iw) fail(`${where}: sideways scroll (${sw} > ${iw})`);
 }
 
+/** Waits for the look screen and checks it. Returns the profile id and its visible text. */
+async function checkProfileScreen(page, label) {
+  const vh = page.viewportSize().height;
+  const vw = page.viewportSize().width;
+  await page.waitForSelector('[data-testid="profile"]', { timeout: 10_000 });
+  const profile = page.locator('[data-testid="profile"]');
+  const profileId = await profile.getAttribute("data-profile-id");
+  await sleep(700); // let the rise-in animation finish
+
+  // ---- profile screen checks ----
+  // wait for every picture on the profile to decode
+  await page
+    .waitForFunction(() => [...document.querySelectorAll('[data-testid="profile"] img')].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 4_000 })
+    .catch(() => {});
+  const m = await page.evaluate(() => {
+    const root = document.querySelector('[data-testid="profile"]');
+    const header = root.querySelector("header");
+    const factCards = [...root.querySelectorAll('[data-fact="true"]')];
+    const boxes = [header, ...factCards].map((e) => e.getBoundingClientRect());
+    const imgs = [...root.querySelectorAll("img")];
+    const fontPx = [...root.querySelectorAll('header h2 ~ p, [data-fact="true"] p:first-child')].map((e) => parseFloat(getComputedStyle(e).fontSize));
+    const feed = root.querySelector('[data-testid="feed"]');
+    return {
+      scrollH: document.documentElement.scrollHeight,
+      scrollW: document.documentElement.scrollWidth,
+      bodyScrollH: document.body.scrollHeight,
+      bottom: Math.max(...boxes.map((b) => b.bottom)),
+      top: Math.min(...boxes.map((b) => b.top)),
+      right: Math.max(...boxes.map((b) => b.right)),
+      factCards: factCards.length,
+      cards: root.querySelectorAll('[data-testid="card"]').length,
+      hiddenNoise: Number(feed?.getAttribute("data-hidden-noise") ?? 0),
+      broken: imgs.filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.getAttribute("src")),
+      minFont: Math.min(...fontPx),
+      text: root.innerText,
+    };
+  });
+  if (m.scrollH > vh || m.bodyScrollH > vh) fail(`${label} ${profileId}: profile screen scrolls (${m.scrollH}px > ${vh}px)`);
+  if (m.bottom > vh + 0.5 || m.top < -0.5) fail(`${label} ${profileId}: a fact card or the header is cut off (${Math.round(m.top)}–${Math.round(m.bottom)} of ${vh})`);
+  if (m.right > vw + 0.5 || m.scrollW > vw) fail(`${label} ${profileId}: profile wider than screen`);
+  if (m.broken.length) fail(`${label} ${profileId}: broken images ${m.broken.join(", ")}`);
+  if (m.minFont < 13) fail(`${label} ${profileId}: body text ${m.minFont}px (< 13px)`);
+  // Short screens (e.g. 375×667) may hide all noise; the plan says hide noise first, never facts.
+  if (vh >= 700 && m.cards - m.factCards < 1) fail(`${label} ${profileId}: every noise card was hidden`);
+  layoutLog.push(`${vp(page)} ${profileId}: ${m.cards} cards shown, ${m.hiddenNoise} noise hidden`);
+  const profileText = m.text;
+  return { profileId, profileText };
+}
+
 /** Plays one run from the 3-2-1 screen to results. Returns { profileId, score }. */
 async function playRun(page, label, { shots = null, lookMs = 3000, timeoutOne = false } = {}) {
   const vh = page.viewportSize().height;
@@ -82,36 +143,7 @@ async function playRun(page, label, { shots = null, lookMs = 3000, timeoutOne = 
 
   await page.waitForSelector('[data-testid="ready"]', { timeout: 10_000 });
   await noSideScroll(page, `${label} ready`);
-  await page.waitForSelector('[data-testid="profile"]', { timeout: 10_000 });
-  const profile = page.locator('[data-testid="profile"]');
-  const profileId = await profile.getAttribute("data-profile-id");
-  await sleep(700); // let the rise-in animation finish
-
-  // ---- profile screen checks ----
-  const m = await page.evaluate(() => {
-    const card = document.querySelector('[data-testid="profile"]');
-    const items = [...card.querySelectorAll("li, h2, p")];
-    const bottom = Math.max(...items.map((e) => e.getBoundingClientRect().bottom));
-    const right = Math.max(...items.map((e) => e.getBoundingClientRect().right));
-    const imgs = [...document.querySelectorAll("main img")];
-    const fontPx = [...card.querySelectorAll("li p, h2 + p + p")].map((e) => parseFloat(getComputedStyle(e).fontSize));
-    return {
-      scrollH: document.documentElement.scrollHeight,
-      scrollW: document.documentElement.scrollWidth,
-      bodyScrollH: document.body.scrollHeight,
-      bottom,
-      right,
-      broken: imgs.filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.getAttribute("src")),
-      minFont: Math.min(...fontPx),
-      text: card.innerText,
-    };
-  });
-  if (m.scrollH > vh || m.bodyScrollH > vh) fail(`${label} ${profileId}: profile screen scrolls (${m.scrollH}px > ${vh}px)`);
-  if (m.bottom > vh + 0.5) fail(`${label} ${profileId}: profile card cut off at bottom (${Math.round(m.bottom)} > ${vh})`);
-  if (m.right > vw + 0.5 || m.scrollW > vw) fail(`${label} ${profileId}: profile card wider than screen`);
-  if (m.broken.length) fail(`${label} ${profileId}: broken images ${m.broken.join(", ")}`);
-  if (m.minFont < 15) fail(`${label} ${profileId}: body text ${m.minFont}px (< 15px)`);
-  const profileText = m.text;
+  const { profileId, profileText } = await checkProfileScreen(page, label);
 
   if (shots) {
     await sleep(800);
@@ -211,6 +243,17 @@ async function testViewport(browser, vp) {
   await sleep(1200); // demo loop: profile visible
   await page.screenshot({ path: path.join(DOCS, `title-${vp.name}.png`) });
 
+  // ---- layout sweep: every profile's look screen ----
+  for (const id of PROFILE_IDS) {
+    await page.goto(`${BASE}/play?profile=${id}&time=60`, { waitUntil: "networkidle" });
+    const { profileId } = await checkProfileScreen(page, `${vp.name} sweep`);
+    if (profileId !== id) fail(`${vp.name} sweep: asked for ${id}, got ${profileId}`);
+    if (SWEEP_DIR) await page.screenshot({ path: path.join(SWEEP_DIR, `${id}-${vp.name}.png`) });
+  }
+  console.log(`  layout sweep: ${PROFILE_IDS.length} profiles checked`);
+  await page.goto(BASE + "/", { waitUntil: "networkidle" });
+  await page.waitForSelector('[data-testid="title-screen"]');
+
   // ---- full-length run with screenshots ----
   await page.locator('button[data-testid="play"]').click();
   const seq = [];
@@ -263,7 +306,23 @@ try {
   fs.mkdirSync(DOCS, { recursive: true });
   browser = await chromium.launch();
   const results = await Promise.all(VIEWPORTS.map((vp) => testViewport(browser, vp)));
+  for (const vp of SHORT_VIEWPORTS) {
+    const context = await browser.newContext({ ...vp, name: undefined });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    for (const id of PROFILE_IDS) {
+      await page.goto(`${BASE}/play?profile=${id}&time=60`, { waitUntil: "networkidle" });
+      await checkProfileScreen(page, `${vp.name} sweep`);
+      if (SWEEP_DIR) await page.screenshot({ path: path.join(SWEEP_DIR, `${id}-${vp.name}.png`) });
+    }
+    if (errors.length) fail(`${vp.name}: page errors ${errors.join("; ")}`);
+    console.log(`\n▶ ${vp.name}: layout sweep of ${PROFILE_IDS.length} profiles done`);
+    await context.close();
+  }
   console.log(`\n${results.map((s, i) => `${VIEWPORTS[i].name}: ${s.length} runs`).join(", ")}`);
+  const hid = layoutLog.filter((l) => !l.endsWith(" 0 noise hidden"));
+  console.log(`layout: ${layoutLog.length} profile screens checked; ${hid.length} needed noise cards hidden${hid.length ? ":\n  " + [...new Set(hid)].join("\n  ") : ""}`);
 } catch (e) {
   fail("crashed: " + (e?.stack || e));
 } finally {

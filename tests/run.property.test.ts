@@ -4,7 +4,9 @@ import { distractors } from "@/content/distractors";
 import { buildRun, OPTIONS_PER_QUESTION, QUESTIONS_PER_RUN } from "@/lib/buildRun";
 import { drawFromBag, type BagState } from "@/lib/bag";
 import { mulberry32 } from "@/lib/rng";
-import { containsPhrase, profileText } from "@/lib/text";
+import { containsPhrase, profileText, sigWords } from "@/lib/text";
+import { imageWords, profileImages, speciesOf, images } from "@/lib/images";
+import { isNoise } from "@/content/types";
 import { parseParams } from "@/lib/params";
 import { rankFor } from "@/content/ranks";
 
@@ -21,6 +23,7 @@ describe("buildRun (2,000 seeds)", () => {
       const profile = profiles.find((p) => p.id === drawn.id)!;
       const run = buildRun(profile, rng, distractors);
       const text = profileText(profile);
+      const shown = imageWords(profile);
 
       expect(run.questions).toHaveLength(QUESTIONS_PER_RUN);
       expect(new Set(run.questions.map((q) => q.factId)).size).toBe(QUESTIONS_PER_RUN);
@@ -34,6 +37,8 @@ describe("buildRun (2,000 seeds)", () => {
         for (const o of q.options) {
           if (o === q.answer) continue;
           expect(containsPhrase(text, o), `${ctx}: distractor "${o}" must not be on profile`).toBe(false);
+          const inPicture = shown.has(o.toLowerCase()) || sigWords(o).some((w) => shown.has(w));
+          expect(inPicture, `${ctx}: distractor "${o}" must not be shown in a picture`).toBe(false);
         }
       }
     }
@@ -55,6 +60,27 @@ describe("buildRun (2,000 seeds)", () => {
     }
     expect(asked.size).toBe(6);
     expect(firstOptions.size).toBeGreaterThan(20);
+  });
+});
+
+describe("feed content", () => {
+  it("follows the image and card rules", () => {
+    const use = new Map<string, Set<string>>();
+    for (const p of profiles) {
+      expect(p.feed.length, p.id).toBeGreaterThanOrEqual(6);
+      expect(p.feed.length, p.id).toBeLessThanOrEqual(8);
+      const noise = p.feed.filter(isNoise);
+      expect(noise.length, p.id).toBeGreaterThanOrEqual(3);
+      expect(noise.some((c) => c.kind === "meme"), p.id).toBe(true);
+      for (const f of profileImages(p)) {
+        expect(images[f], `${p.id}: ${f} in manifest`).toBeDefined();
+        if (images[f].kind === "pet") expect(speciesOf(f), `${p.id}: ${f}`).toBe(p.species);
+        use.set(f, (use.get(f) ?? new Set()).add(p.id));
+      }
+      // facts only ever live in text (bio / text posts / photo captions)
+      for (const f of p.facts) expect(["bio", "text", "photo"]).toContain(f.where);
+    }
+    for (const [f, who] of use) expect(who.size, `${f} used by ${[...who]}`).toBeLessThanOrEqual(2);
   });
 });
 

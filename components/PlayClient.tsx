@@ -8,12 +8,13 @@ import { drawFromBag, loadBag, saveBag, type BagState } from "@/lib/bag";
 import { mulberry32, randomSeed } from "@/lib/rng";
 import { useKeys, useNow } from "@/lib/hooks";
 import type { GameParams } from "@/lib/params";
-import ProfileCard from "./ProfileCard";
+import ProfileHeader from "./ProfileHeader";
+import FeedGrid from "./FeedGrid";
+import { feedSrc, profileImages } from "@/lib/images";
 import Ring from "./Ring";
 import Timer from "./Timer";
 import Question from "./Question";
 import Results from "./Results";
-import Dot from "./Dot";
 
 const READY_MS = 3000;
 const LEAVE_MS = 600;
@@ -41,15 +42,16 @@ export default function PlayClient({ params, onTitle }: { params: GameParams; on
     const drawn = drawFromBag(saved, ids, rng);
     if (params.seed !== null) memBag.current = drawn.state;
     else saveBag(drawn.state);
-    const profile = profiles.find((p) => p.id === drawn.id)!;
+    // ?profile=id previews one profile every run (for authors); the bag is still advanced.
+    const profile = profiles.find((p) => p.id === (params.profile ?? drawn.id)) ?? profiles.find((p) => p.id === drawn.id)!;
     // Warm the image cache during the 3-2-1 so the profile appears complete.
-    for (const src of [profile.avatar, ...profile.posts.map((x) => x.photo).filter(Boolean)]) {
+    for (const src of [`/pfp/${profile.avatar}`, ...profileImages(profile).map(feedSrc)]) {
       const img = new Image();
-      img.src = `/pfp/${src}`;
+      img.src = src;
     }
     setSeed(s);
     setRun(buildRun(profile, rng, distractors));
-  }, [params.seed]);
+  }, [params.seed, params.profile]);
 
   // ---- phase machine ----
   const [phase, setPhase] = useState<Phase>("ready");
@@ -121,6 +123,12 @@ export default function PlayClient({ params, onTitle }: { params: GameParams; on
   });
 
   const now = useNow(phase === "ready" || phase === "look");
+  const [ringSize, setRingSize] = useState(56);
+  useEffect(() => {
+    try {
+      setRingSize(matchMedia("(min-width: 1024px)").matches ? 76 : 56);
+    } catch {}
+  }, []);
   const elapsed = Math.max(0, now - phaseStart);
 
   if (!run) return <main className="min-h-[100dvh] bg-ink" />;
@@ -142,7 +150,7 @@ export default function PlayClient({ params, onTitle }: { params: GameParams; on
 
   return (
     <main
-      className="relative flex h-[100dvh] flex-col overflow-hidden px-4 pb-4 pt-3 sm:px-8 sm:pb-8 sm:pt-6"
+      className="relative flex h-[100dvh] flex-col overflow-hidden px-4 pb-3 pt-3 sm:px-8 sm:pb-8 sm:pt-6"
       data-testid="play"
       data-phase={phase}
       data-profile-id={run.profile.id}
@@ -151,21 +159,17 @@ export default function PlayClient({ params, onTitle }: { params: GameParams; on
       {phase === "ready" && <Ready count={Math.max(1, 3 - Math.floor(elapsed / 1000))} lookSeconds={params.lookSeconds} />}
 
       {(phase === "look" || phase === "leaving") && (
-        <>
-          <div className="mx-auto flex w-full max-w-[640px] items-center justify-between gap-4 pb-3 sm:pb-4">
-            <div className="flex items-center gap-2.5">
-              <Dot size={34} animated />
-              <div>
-                <p className="font-mono text-xs font-bold uppercase tracking-[0.25em] text-lime-400 sm:text-sm">Remember it!</p>
-                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500 sm:text-xs">5 questions coming</p>
-              </div>
-            </div>
-            <Ring remaining={phase === "look" ? lookMs - elapsed : 0} total={lookMs} size={64} />
-          </div>
-          <div className={`mx-auto w-full max-w-[640px] ${phase === "leaving" ? "look-out" : "rise-in"}`}>
-            <ProfileCard profile={run.profile} />
-          </div>
-        </>
+        <div
+          className={`mx-auto flex min-h-0 w-full max-w-[1000px] flex-1 flex-col gap-2 lg:flex-row lg:gap-6 ${phase === "leaving" ? "look-out" : "rise-in"}`}
+          data-testid="profile"
+          data-profile-id={run.profile.id}
+        >
+          <ProfileHeader
+            profile={run.profile}
+            ring={<Ring remaining={phase === "look" ? lookMs - elapsed : 0} total={lookMs} size={ringSize} />}
+          />
+          <FeedGrid cards={run.profile.feed} />
+        </div>
       )}
 
       {phase === "quiz" && (

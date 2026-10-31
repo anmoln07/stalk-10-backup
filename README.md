@@ -72,24 +72,45 @@ The site is fully static, so after the first load it keeps working if the Wi-Fi 
 
 ## Add a profile
 
-Edit `content/profiles.ts` and add an object to the `profiles` array (copy an existing one):
+Edit `content/profiles.ts` and add an object to the `profiles` array (copy an existing one). Types are in
+`content/types.ts`.
 
-- `id`, `name` (obviously invented), `handle`, `avatar` (a file in `public/pfp/`), `bio`, `location`,
-  `joined` (`"Joined March 2023"`), `banner` (any CSS background, e.g. a gradient).
-- 3–4 `posts` (`time` like `2h`, `text` ≤ 60 chars); **exactly one** has a `photo` (a file in `public/pfp/`).
-- Exactly **6 `facts`**: 2 with `where: "bio"` (the bio or the location row), 3 `"post"`, 1 `"photo"`.
-  Each `answer` must appear word-for-word (case-insensitive) in that area; the question must not contain the
-  answer. `category` picks the wrong-answer pool: `pet city food drink hobby trip colour team gadget music`.
+- `id`, `name` (obviously invented), `handle`, `avatar` (a file in `public/pfp/`), `bio`, `location` (an
+  Indian city), `joined` (`"Joined March 2023"`).
+- Optional `banner`: a `place-*` image from `public/feed/` (shown as a 3:1 centre crop), else a gradient.
+- Optional `species` (`cat dog parrot hamster rabbit duck`): needed if the profile uses a `pet-*` photo,
+  and it must match the photo.
+- `feed`: **6–8 cards**, in display order, each ≤ 12 words:
+  - `text` – a plain post (`time`, `text`).
+  - `photo` – an image from `public/feed/` plus a `caption`. Facts can live in the caption.
+  - `meme` / `news` / `art` – **noise** cards. At least 3 per profile, including one meme.
+- Exactly **6 `facts`**: 2 with `where: "bio"` (bio or 📍 row), the rest `"text"` or `"photo"` (caption).
+  Facts live **only in text**, never only in an image. Each `answer` must appear word-for-word
+  (case-insensitive) in that area; the question must not contain the answer. `category` picks the
+  wrong-answer pool: `pet city food drink hobby trip colour team gadget music`.
 
-Then run `npm run lint:content && npm test`. The lint enforces all of the above plus: ≤ 80 visible words,
-bio ≤ 70 chars, avatars exist, no duplicate ids/handles/answers, at least 5 safe wrong answers per fact, and
-a banned-content scan (long numbers, emails, links, school/workplace words, birthdays, passwords/PINs,
-addresses, ID documents).
+Then run `npm run lint:content && npm test`. The lint enforces all of the above plus: ≤ 110 visible words,
+≤ 60 of them on fact-carrying text, ≤ 12 words per card, images exist, `pet-*` images only on a matching
+`species`, no image used on more than 2 profiles, no image whose `shows` tags (in
+`public/feed/manifest.json`) match a wrong answer that profile could be offered, and a banned-content scan
+(long numbers, emails, links, school/workplace words, birthdays, passwords/PINs, addresses, ID documents).
+
+On short screens the feed hides noise cards first (never a fact card) so the profile never scrolls.
+
+## Add noise captions
+
+`content/noise.ts` holds the text for noise cards, keyed by image file name:
+
+- `memeCaptions` – 2–3 per meme image. `"top | bottom"` puts text top and bottom; no `|` = bottom only.
+- `newsHeadlines` – 1–2 per news image, each `{ headline, source }`; the outlet is made up.
+- `artCaptions` – 1–2 short captions per art image.
+
+A profile's noise card copies one of these strings; the lint checks that it does. Keep them friendly, ≤ 8
+words, with no real people, brands, outlets, politics or real news events.
 
 **Content rules:** fictional people only, everyday topics only (pets, food, drinks, hobbies, colours, holiday
 places, invented teams, music, gadgets). Never phone numbers, addresses, schools, workplaces, birth dates,
-passwords or security answers, or anything about real people or brands. Only reuse the 18 images in
-`public/pfp/`.
+passwords or security answers, or anything about real people or brands.
 
 **Wrong answers** live in `content/distractors.ts` (≥ 8 per category, same style as the right answers). At run
 time each question gets 3 drawn at random; any entry that matches the answer or shares a meaningful word with

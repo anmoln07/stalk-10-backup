@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useGameParams } from "@/lib/hooks";
 import { profiles } from "@/content/profiles";
+import { feedSrc, profileImages } from "@/lib/images";
 import TitleScreen from "./TitleScreen";
 import PlayClient from "./PlayClient";
 
@@ -11,7 +12,8 @@ type Mode = "title" | "play";
 const warmed: HTMLImageElement[] = [];
 function warmImages() {
   if (warmed.length) return;
-  const files = new Set(["/logo.svg", ...profiles.flatMap((p) => [p.avatar, ...p.posts.map((x) => x.photo ?? "")]).filter(Boolean).map((f) => `/pfp/${f}`)]);
+  // Every picture a profile can show (~2 MB), so the game keeps working if the Wi-Fi drops.
+  const files = new Set(["/logo.svg", ...profiles.flatMap((p) => [`/pfp/${p.avatar}`, ...profileImages(p).map(feedSrc)])]);
   files.forEach((src) => {
     const img = new Image();
     img.decoding = "async";

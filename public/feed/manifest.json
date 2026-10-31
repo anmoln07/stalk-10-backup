@@ -1,0 +1,682 @@
+[
+ {
+  "file": "object-01.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "guitar",
+  "shows": [
+   "guitar",
+   "music",
+   "plant",
+   "cosy"
+  ]
+ },
+ {
+  "file": "object-02.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "books",
+  "shows": [
+   "books",
+   "reading",
+   "mug",
+   "hot drink"
+  ]
+ },
+ {
+  "file": "object-03.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "yellow sneakers",
+  "shows": [
+   "sneakers",
+   "shoes",
+   "yellow"
+  ]
+ },
+ {
+  "file": "object-04.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "film camera",
+  "shows": [
+   "camera",
+   "photography"
+  ]
+ },
+ {
+  "file": "object-05.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "desk setup",
+  "shows": [
+   "laptop",
+   "desk",
+   "lamp",
+   "plant",
+   "night",
+   "study"
+  ]
+ },
+ {
+  "file": "object-06.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "pottery bowl",
+  "shows": [
+   "pottery",
+   "clay",
+   "bowl"
+  ]
+ },
+ {
+  "file": "object-07.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "skateboard",
+  "shows": [
+   "skateboard",
+   "skate",
+   "outdoors"
+  ]
+ },
+ {
+  "file": "object-08.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "cricket bat and ball",
+  "shows": [
+   "cricket",
+   "bat",
+   "ball",
+   "sport"
+  ]
+ },
+ {
+  "file": "object-09.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "headphones on vinyl",
+  "shows": [
+   "music",
+   "headphones",
+   "vinyl",
+   "record"
+  ]
+ },
+ {
+  "file": "food-01.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "iced latte",
+  "shows": [
+   "iced latte",
+   "coffee",
+   "drink",
+   "cafe"
+  ]
+ },
+ {
+  "file": "food-02.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "samosas",
+  "shows": [
+   "samosa",
+   "snack",
+   "chutney"
+  ]
+ },
+ {
+  "file": "food-03.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "pizza slice",
+  "shows": [
+   "pizza"
+  ]
+ },
+ {
+  "file": "food-04.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "masala chai in kulhad",
+  "shows": [
+   "chai",
+   "tea",
+   "drink"
+  ]
+ },
+ {
+  "file": "food-05.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "ramen",
+  "shows": [
+   "ramen",
+   "noodles"
+  ]
+ },
+ {
+  "file": "food-06.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "dosa",
+  "shows": [
+   "dosa",
+   "south indian"
+  ]
+ },
+ {
+  "file": "food-07.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "brownies",
+  "shows": [
+   "brownie",
+   "dessert",
+   "chocolate"
+  ]
+ },
+ {
+  "file": "food-08.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "mango lassi",
+  "shows": [
+   "lassi",
+   "mango",
+   "drink",
+   "yellow"
+  ]
+ },
+ {
+  "file": "food-09.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "momos",
+  "shows": [
+   "momos",
+   "dumplings"
+  ]
+ },
+ {
+  "file": "place-01.webp",
+  "kind": "place",
+  "aspect": "16:9",
+  "desc": "beach sunset with palms",
+  "shows": [
+   "beach",
+   "sunset",
+   "palm",
+   "sea"
+  ]
+ },
+ {
+  "file": "place-02.webp",
+  "kind": "place",
+  "aspect": "16:9",
+  "desc": "misty hill road",
+  "shows": [
+   "hills",
+   "mist",
+   "pine",
+   "road"
+  ]
+ },
+ {
+  "file": "place-03.webp",
+  "kind": "place",
+  "aspect": "16:9",
+  "desc": "rainy street at night",
+  "shows": [
+   "rain",
+   "night",
+   "street",
+   "city"
+  ]
+ },
+ {
+  "file": "place-04.webp",
+  "kind": "place",
+  "aspect": "16:9",
+  "desc": "rooftop at dusk",
+  "shows": [
+   "rooftop",
+   "dusk",
+   "string lights"
+  ]
+ },
+ {
+  "file": "place-05.webp",
+  "kind": "place",
+  "aspect": "16:9",
+  "desc": "train window, green fields",
+  "shows": [
+   "train",
+   "window",
+   "fields",
+   "travel"
+  ]
+ },
+ {
+  "file": "place-06.webp",
+  "kind": "place",
+  "aspect": "16:9",
+  "desc": "lake sunrise with boat",
+  "shows": [
+   "lake",
+   "sunrise",
+   "boat"
+  ]
+ },
+ {
+  "file": "place-07.webp",
+  "kind": "place",
+  "aspect": "16:9",
+  "desc": "old town lane",
+  "shows": [
+   "lane",
+   "balconies",
+   "old town"
+  ]
+ },
+ {
+  "file": "place-08.webp",
+  "kind": "place",
+  "aspect": "16:9",
+  "desc": "cafe interior",
+  "shows": [
+   "cafe",
+   "interior",
+   "tables"
+  ]
+ },
+ {
+  "file": "place-09.webp",
+  "kind": "place",
+  "aspect": "16:9",
+  "desc": "highway at sunrise",
+  "shows": [
+   "highway",
+   "sunrise",
+   "road"
+  ]
+ },
+ {
+  "file": "pet-01.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "orange tabby cat",
+  "shows": [
+   "cat",
+   "orange"
+  ]
+ },
+ {
+  "file": "pet-02.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "grey cat in window",
+  "shows": [
+   "cat",
+   "grey"
+  ]
+ },
+ {
+  "file": "pet-03.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "golden retriever puppy",
+  "shows": [
+   "dog",
+   "puppy",
+   "golden"
+  ]
+ },
+ {
+  "file": "pet-04.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "corgi in park",
+  "shows": [
+   "dog",
+   "corgi"
+  ]
+ },
+ {
+  "file": "pet-05.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "brown dog sleeping",
+  "shows": [
+   "dog",
+   "sleeping"
+  ]
+ },
+ {
+  "file": "pet-06.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "green parrot",
+  "shows": [
+   "parrot",
+   "bird",
+   "green"
+  ]
+ },
+ {
+  "file": "pet-07.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "hamster eating seed",
+  "shows": [
+   "hamster"
+  ]
+ },
+ {
+  "file": "pet-08.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "white rabbit",
+  "shows": [
+   "rabbit",
+   "bunny"
+  ]
+ },
+ {
+  "file": "pet-09.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "two ducks at pond",
+  "shows": [
+   "duck",
+   "ducks",
+   "pond"
+  ]
+ },
+ {
+  "file": "meme-01.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "unimpressed cat",
+  "shows": [
+   "cat",
+   "grumpy"
+  ]
+ },
+ {
+  "file": "meme-02.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "pigeon in sunglasses",
+  "shows": [
+   "pigeon",
+   "bird",
+   "sunglasses"
+  ]
+ },
+ {
+  "file": "meme-03.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "shocked hamster",
+  "shows": [
+   "hamster",
+   "shocked"
+  ]
+ },
+ {
+  "file": "meme-04.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "capybara in hot spring",
+  "shows": [
+   "capybara",
+   "hot spring"
+  ]
+ },
+ {
+  "file": "meme-05.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "menacing goose in hallway",
+  "shows": [
+   "goose",
+   "bird"
+  ]
+ },
+ {
+  "file": "meme-06.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "sweating cartoon potato",
+  "shows": [
+   "potato",
+   "cartoon",
+   "stressed"
+  ]
+ },
+ {
+  "file": "meme-07.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "raccoon with pizza crust",
+  "shows": [
+   "raccoon",
+   "pizza"
+  ]
+ },
+ {
+  "file": "meme-08.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "dog in lab coat at laptop",
+  "shows": [
+   "dog",
+   "laptop",
+   "lab coat"
+  ]
+ },
+ {
+  "file": "meme-09.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "tired cartoon frog with coffee",
+  "shows": [
+   "frog",
+   "coffee",
+   "cartoon",
+   "tired"
+  ]
+ },
+ {
+  "file": "news-01.webp",
+  "kind": "news",
+  "aspect": "16:9",
+  "desc": "monsoon clouds over skyline",
+  "shows": [
+   "rain",
+   "clouds",
+   "city"
+  ]
+ },
+ {
+  "file": "news-02.webp",
+  "kind": "news",
+  "aspect": "16:9",
+  "desc": "crowded railway platform (crowd, some faces visible)",
+  "shows": [
+   "train",
+   "station",
+   "crowd"
+  ]
+ },
+ {
+  "file": "news-03.webp",
+  "kind": "news",
+  "aspect": "16:9",
+  "desc": "cricket stadium under floodlights",
+  "shows": [
+   "cricket",
+   "stadium"
+  ]
+ },
+ {
+  "file": "news-04.webp",
+  "kind": "news",
+  "aspect": "16:9",
+  "desc": "rocket launch at dawn",
+  "shows": [
+   "rocket",
+   "space",
+   "launch"
+  ]
+ },
+ {
+  "file": "news-05.webp",
+  "kind": "news",
+  "aspect": "16:9",
+  "desc": "vegetable market",
+  "shows": [
+   "market",
+   "vegetables"
+  ]
+ },
+ {
+  "file": "news-06.webp",
+  "kind": "news",
+  "aspect": "16:9",
+  "desc": "bridge at dusk with traffic",
+  "shows": [
+   "bridge",
+   "traffic",
+   "dusk"
+  ]
+ },
+ {
+  "file": "news-07.webp",
+  "kind": "news",
+  "aspect": "16:9",
+  "desc": "solar panel field at sunset",
+  "shows": [
+   "solar",
+   "energy"
+  ]
+ },
+ {
+  "file": "news-08.webp",
+  "kind": "news",
+  "aspect": "16:9",
+  "desc": "robot arm in lab",
+  "shows": [
+   "robot",
+   "lab",
+   "tech"
+  ]
+ },
+ {
+  "file": "news-09.webp",
+  "kind": "news",
+  "aspect": "16:9",
+  "desc": "fireworks over skyline",
+  "shows": [
+   "fireworks",
+   "city",
+   "night"
+  ]
+ },
+ {
+  "file": "art-01.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "risograph pink sun over hills",
+  "shows": [
+   "riso",
+   "sun",
+   "hills"
+  ]
+ },
+ {
+  "file": "art-02.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "pixel art city at night",
+  "shows": [
+   "pixel art",
+   "city",
+   "night"
+  ]
+ },
+ {
+  "file": "art-03.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "neo-brutalist colour blocks",
+  "shows": [
+   "abstract",
+   "poster"
+  ]
+ },
+ {
+  "file": "art-04.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "watercolour mountains",
+  "shows": [
+   "watercolour",
+   "mountains"
+  ]
+ },
+ {
+  "file": "art-05.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "retro computer with smiley",
+  "shows": [
+   "retro",
+   "computer"
+  ]
+ },
+ {
+  "file": "art-06.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "Y2K chrome blob",
+  "shows": [
+   "y2k",
+   "chrome"
+  ]
+ },
+ {
+  "file": "art-07.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "line-art reader under tree",
+  "shows": [
+   "line art",
+   "reading",
+   "tree"
+  ]
+ },
+ {
+  "file": "art-08.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "acrylic sunset",
+  "shows": [
+   "painting",
+   "sunset"
+  ]
+ },
+ {
+  "file": "art-09.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "paper-cut fish",
+  "shows": [
+   "collage",
+   "fish"
+  ]
+ }
+]

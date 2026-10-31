@@ -1,6 +1,7 @@
 import type { Category, Profile } from "@/content/types";
 import { shuffle, type Rng } from "./rng";
 import { isSafeDistractor, profileText } from "./text";
+import { imageWords } from "./images";
 
 export const QUESTIONS_PER_RUN = 5;
 export const OPTIONS_PER_QUESTION = 4;
@@ -18,13 +19,14 @@ export type Run = { profile: Profile; questions: Question[] };
 /** Pool entries that are safe wrong answers for this fact on this profile. */
 export function safeCandidates(profile: Profile, answer: string, pool: readonly string[]): string[] {
   const text = profileText(profile);
+  const shown = imageWords(profile);
   const seen = new Set<string>();
   const out: string[] = [];
   for (const c of pool) {
     const k = c.trim().toLowerCase();
     if (seen.has(k)) continue;
     seen.add(k);
-    if (isSafeDistractor(c, answer, text)) out.push(c.trim());
+    if (isSafeDistractor(c, answer, text, shown)) out.push(c.trim());
   }
   return out;
 }
