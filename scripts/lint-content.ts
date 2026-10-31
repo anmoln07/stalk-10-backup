@@ -10,7 +10,7 @@ import { ranks } from "../content/ranks";
 import { lessons } from "../content/lessons";
 import { MAX_POST_WORDS, MAX_REPLY_WORDS, QUESTIONS_PER_ROUND, RULES } from "../content/rules";
 import { DIFFICULTIES, factKind, isNoise, type Category, type Fact, type Profile } from "../content/types";
-import { areaText, cardText, containsPhrase, factText, postText, profileText, sigWords, stem, threadOf, wordCount } from "../lib/text";
+import { areaText, cardText, containsPhrase, factText, postText, postsTabText, profileText, sigWords, stem, threadOf, wordCount } from "../lib/text";
 import { images, imageWords, profileImages, speciesOf } from "../lib/images";
 import { calcValue, formatCalc, safeCandidates, safeLookalikes } from "../lib/buildRun";
 
@@ -106,7 +106,7 @@ function checkFact(p: Profile, f: Fact, text: string, shown: Set<string>, imgs: 
   if (f.kind === "not") {
     if (!/\bNOT\b/.test(f.question)) fail(at, 'NOT question must say "NOT" in capitals');
     if (f.present.length < 3) fail(at, `needs ≥ 3 present items (has ${f.present.length})`);
-    for (const x of f.present) if (!containsPhrase(text, x)) fail(at, `present item "${x}" is not on the profile`);
+    for (const x of f.present) if (!containsPhrase(postsTabText(p), x)) fail(at, `present item "${x}" is not on the Posts tab`);
     for (const c of f.categories) if (!CATEGORIES.includes(c)) fail(at, `unknown category ${c}`);
     const absent = safeCandidates(p, f.present[0], f.categories.flatMap((c) => distractors[c])).filter((c) =>
       f.present.every((x) => !sigWords(x).some((w) => sigWords(c).includes(w))),
@@ -145,6 +145,7 @@ function checkFact(p: Profile, f: Fact, text: string, shown: Set<string>, imgs: 
     if (!containsPhrase(text, f.answer)) fail(at, `answer "${f.answer}" not in profile text`);
     else if (!containsPhrase(areaText(p, f.where), f.answer)) fail(at, `answer "${f.answer}" not in its "${f.where}" area`);
     if (!containsPhrase(factText(p), f.answer)) fail(at, `answer "${f.answer}" only appears in noise cards`);
+    if (!containsPhrase(postsTabText(p), f.answer)) fail(at, `answer "${f.answer}" is not on the Posts tab (Replies/Media only)`);
   }
   for (const d of f.decoys ?? []) {
     const onProfile = containsPhrase(text, d) || shown.has(lc(d));
@@ -228,6 +229,15 @@ for (const p of profiles) {
     for (const k of ["meme", "news", "art"] as const) if (c.kind === k && kindOf(c.image) !== k) fail(cat, `${c.image} is not a ${k} image`);
     if (c.kind === "news" && c.image === "news-02.webp") fail(cat, "news-02 shows faces in a crowd; don't use it");
   });
+
+  // Replies tab: the target's own replies to friends (light, decoys OK, never the only home of a fact)
+  for (const [i, r] of (p.replies ?? []).entries()) {
+    const rat = `${at} reply ${i + 1}`;
+    if (!friends[r.to]) fail(rat, `reply to unknown friend @${r.to}`);
+    if (!TIME.test(r.time)) fail(rat, `time "${r.time}" should look like 2h / 1d`);
+    if (wordCount(r.text) > MAX_REPLY_WORDS) fail(rat, `"${r.text}" is ${wordCount(r.text)} words (max ${MAX_REPLY_WORDS})`);
+  }
+  if ((p.replies ?? []).length > 4) fail(at, "keep the Replies tab light (≤ 4 replies)");
 
   // budgets + banned content
   const text = profileText(p);

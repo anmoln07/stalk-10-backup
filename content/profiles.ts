@@ -16,6 +16,10 @@ export const profiles: Profile[] = [
     id: "zoya", difficulty: "easy", name: "Zoya Khan", handle: "zoya_kickflips", avatar: "p-skate.webp",
     bio: "Skater from Bhopal 🛹 Pani puri over pizza, always.",
     location: "Bhopal", joined: "Joined October 2023",
+    replies: [
+      { to: "zara_h", time: "2h", text: "Flute girl, you're coming skating Sunday. No excuses.", likes: 3 },
+      { to: "om_p", time: "1d", text: "That kickflip was clean!! Teach me.", likes: 5 },
+    ],
     feed: [
       { kind: "photo", time: "1h", caption: "My new board is teal! Already scratched it.", image: "object-07.webp", likes: 58 },
       { kind: "text",  time: "3h", text: "Joined a bouldering class. My arms are jelly.", likes: 21 },
@@ -40,6 +44,10 @@ export const profiles: Profile[] = [
     species: "dog",
     bio: "Lucknow hooper 🏀 Big Red Hawks fan.",
     location: "Lucknow", joined: "Joined February 2022",
+    replies: [
+      { to: "kunal_b", time: "3h", text: "Nimbu pani is a snack, not a drink. Fight me.", likes: 4 },
+      { to: "dhruv_j", time: "2d", text: "Court at 6? I'll bring the ball.", likes: 2 },
+    ],
     feed: [
       { kind: "text",  time: "2h", text: "Post-game buttermilk hits different.", likes: 13,
         thread: [{ by: "kunal_b", text: "Buttermilk? Real ones drink nimbu pani.", likes: 6 }] },
@@ -64,6 +72,10 @@ export const profiles: Profile[] = [
     species: "dog",
     bio: "Vizag local 🌊 Coconut water is my whole personality.",
     location: "Vizag", joined: "Joined December 2022",
+    replies: [
+      { to: "pooja_m", time: "4h", text: "Fine, Gokarna next year. Varkala first.", likes: 6 },
+      { to: "vikram_s", time: "1d", text: "The waves won today. Again.", likes: 3 },
+    ],
     feed: [
       { kind: "text",  time: "2h", text: "Started surfing lessons. Mostly learning to fall.", likes: 28 },
       { kind: "meme",  time: "3h", image: "meme-04.webp", caption: "me in the sea | after one wave" },
@@ -87,6 +99,10 @@ export const profiles: Profile[] = [
     id: "meher", difficulty: "easy", name: "Meher Kaur", handle: "meher_blooms", avatar: "p-sunflower.webp", banner: "place-04.webp",
     bio: "Balcony gardener in Dehradun 🌻 Purple everything.",
     location: "Dehradun", joined: "Joined March 2021",
+    replies: [
+      { to: "manav_r", time: "5h", text: "Bring me pine cones from Manali please!", likes: 4 },
+      { to: "kavya_r", time: "2d", text: "Your tulips look amazing 😍", likes: 7 },
+    ],
     feed: [
       { kind: "text",  time: "1h", text: "Crochet project four: a tiny hat for my plant.", likes: 26 },
       { kind: "photo", time: "3h", caption: "Hot chocolate, a book and rain. Perfect day.", image: "object-02.webp", likes: 42 },
@@ -111,6 +127,10 @@ export const profiles: Profile[] = [
     species: "rabbit",
     bio: "Dumpling hunter in Guwahati 🥟 Sky Sharks fan forever.",
     location: "Guwahati", joined: "Joined June 2023",
+    replies: [
+      { to: "ishita_g", time: "2h", text: "Salsa was too fast for me too 😂", likes: 5 },
+      { to: "tanvi_s", time: "1d", text: "Coco says hi to your bunny.", likes: 9 },
+    ],
     feed: [
       { kind: "text",  time: "1h", text: "Kathak practice ran late. My feet are gone.", likes: 18,
         thread: [{ by: "ishita_g", text: "I quit salsa after one class. Respect 🙇", likes: 7 }] },
@@ -137,6 +157,11 @@ export const profiles: Profile[] = [
     species: "dog",
     bio: "Bookworm from Mysuru 📚 Green tea, always.",
     location: "Mysuru", joined: "Joined May 2022",
+    replies: [
+      { to: "neel_k", time: "3h", text: "The cello misses you. Probably.", likes: 4 },
+      { to: "kavya_r", time: "1d", text: "Mochi can stay longer, Peanut will cope.", likes: 6 },
+      { to: "sana_q", time: "2d", text: "Hot chocolate in summer is a crime, Sana.", likes: 8 },
+    ],
     feed: [
       { kind: "text",  time: "2h", text: "Started violin lessons. My neighbours deserve medals.", likes: 19,
         thread: [{ by: "neel_k", text: "Respect. I gave up the cello after one week 😂", likes: 8 }] },
@@ -166,6 +191,10 @@ export const profiles: Profile[] = [
     species: "cat",
     bio: "Vinyl collector 🎶 Learning the tabla in Coimbatore.",
     location: "Coimbatore", joined: "Joined July 2021",
+    replies: [
+      { to: "rahul_v", time: "2h", text: "Practise the sitar AFTER 8am please 🙏", likes: 11 },
+      { to: "nandini_k", time: "1d", text: "Rose milk at 9am is wild.", likes: 3 },
+    ],
     feed: [
       { kind: "text",  time: "1h", text: "Third filter coffee and it's not even noon.", likes: 24,
         thread: [{ by: "nandini_k", text: "Amateur. I'm on my second rose milk already", likes: 9 }] },
@@ -195,6 +224,10 @@ export const profiles: Profile[] = [
     species: "hamster",
     bio: "Jaipur's chai expert ☕ Calligraphy on weekends.",
     location: "Jaipur", joined: "Joined September 2023",
+    replies: [
+      { to: "tanvi_s", time: "3h", text: "Snowy is cute. Bubbles is cuter. Sorry.", likes: 12 },
+      { to: "mehak_g", time: "2d", text: "Chole bhature next Sunday, promise.", likes: 5 },
+    ],
     feed: [
       { kind: "text",  time: "2h", text: "Made rajma chawal for six friends. Zero leftovers.", likes: 35,
         thread: [{ by: "mehak_g", text: "Next time chole bhature please, I'm begging", likes: 11 }] },
@@ -225,6 +258,10 @@ export const profiles: Profile[] = [
     species: "duck",
     bio: "Film photos only 📷 Pondicherry local. Orange is my colour.",
     location: "Pondicherry", joined: "Joined April 2022",
+    replies: [
+      { to: "jay_t", time: "4h", text: "Blue Comets? In this house? Never.", likes: 7 },
+      { to: "riya_d", time: "1d", text: "Major is a menace and I love him.", likes: 9 },
+    ],
     feed: [
       { kind: "text",  time: "1h", text: "Origami class tonight. Made a very sad crane.", likes: 22,
         thread: [{ by: "riya_d", text: "Sad cranes are art. Calligraphy with me next week?", likes: 6 }] },
@@ -255,6 +292,10 @@ export const profiles: Profile[] = [
     id: "sam", difficulty: "medium", name: "Sam Iyer", handle: "sam_after_dark", avatar: "p-silhouette.webp", banner: "place-09.webp",
     bio: "Sunset chaser in Nagpur 🌄 Plays the guitar badly.",
     location: "Nagpur", joined: "Joined November 2023",
+    replies: [
+      { to: "ishita_g", time: "2h", text: "Spiti photos or it didn't happen.", likes: 6 },
+      { to: "kunal_b", time: "1d", text: "Carrom rematch after the tournament.", likes: 4 },
+    ],
     feed: [
       { kind: "text",  time: "2h", text: "Chess tournament tomorrow. Nervous!", likes: 20,
         thread: [{ by: "kunal_b", text: "You'll win. Your carrom champion believes in you 🫡", likes: 9 }] },
@@ -286,6 +327,11 @@ export const profiles: Profile[] = [
     species: "cat", verified: true, followers: 2841, following: 512,
     bio: "Cat mum to Biscuit 🐈 Photographer in Pune. Coffee first.",
     location: "Pune", joined: "Joined March 2023",
+    replies: [
+      { to: "arjun_m", time: "3h", text: "Cookie ate my sandwich. We need to talk.", likes: 14 },
+      { to: "sana_q", time: "1d", text: "Four cold coffees?? Drink some water.", likes: 6 },
+      { to: "jay_t", time: "2d", text: "Nagpur souvenirs, please. Anything.", likes: 3 },
+    ],
     feed: [
       { kind: "text",  time: "2h", text: "Third iced latte today. Send help.", likes: 12,
         thread: [{ by: "sana_q", text: "Only three? I'm on my fourth cold coffee 😭", likes: 7 }] },
@@ -324,6 +370,11 @@ export const profiles: Profile[] = [
     species: "dog", followers: 1630, following: 388,
     bio: "Weekend cyclist 🚲 Dog dad to Toffee. Chandigarh crew.",
     location: "Chandigarh", joined: "Joined June 2022",
+    replies: [
+      { to: "neel_k", time: "2h", text: "Bruno is welcome on the Manali ride. Toffee insists.", likes: 8 },
+      { to: "vikram_s", time: "1d", text: "15 km and a nap is still a ride.", likes: 5 },
+      { to: "dhruv_j", time: "2d", text: "Red Hawks? Lucky? Check the table.", likes: 11 },
+    ],
     feed: [
       { id: "sat", kind: "photo", time: "1h", caption: "Rode 40 km on Saturday. Earned this.", image: "food-08.webp", likes: 54,
         thread: [{ by: "vikram_s", text: "40?! I did 15 and needed a nap 😴", likes: 11 }] },
@@ -361,6 +412,11 @@ export const profiles: Profile[] = [
     species: "parrot", verified: true, followers: 4210, following: 260,
     bio: "Home baker in Kochi 🍋 Never without my mint apron.",
     location: "Kochi", joined: "Joined August 2021",
+    replies: [
+      { to: "farah_a", time: "3h", text: "Mango whistled back at Pickle today!", likes: 15 },
+      { to: "ayesha_m", time: "1d", text: "Peach suits you. Mint suits me.", likes: 6 },
+      { to: "kunal_b", time: "2d", text: "Biryani night? I'm bringing dessert.", likes: 4 },
+    ],
     feed: [
       { kind: "text",  time: "1h", text: "Two hours of salsa and still two left feet.", likes: 15,
         thread: [{ by: "farah_a", text: "Come to my zumba class in Kollam instead, it's easier 😅", likes: 5 }] },
@@ -400,6 +456,11 @@ export const profiles: Profile[] = [
     species: "cat", verified: true, followers: 3377, following: 941,
     bio: "Night-owl gamer 🎮 Masala chai addict. My cat Mochi judges my aim.",
     location: "Indore", joined: "Joined January 2024",
+    replies: [
+      { to: "jay_t", time: "2h", text: "Pixel stole my chair again.", likes: 9 },
+      { to: "om_p", time: "1d", text: "Iron Pandas lost. Again. Just saying.", likes: 13 },
+      { to: "tanvi_s", time: "3d", text: "Blue beanbag beats every chair. Fine.", likes: 5 },
+    ],
     feed: [
       { kind: "photo", time: "1h", caption: "New mechanical keyboard. The clicky kind. Sorry, neighbours.", image: "object-05.webp", likes: 39,
         thread: [{ by: "jay_t", text: "Clicky?? Get a gaming mouse like a normal person", likes: 10 }] },

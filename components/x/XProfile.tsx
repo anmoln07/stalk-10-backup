@@ -1,10 +1,20 @@
+"use client";
 /* eslint-disable @next/next/no-img-element -- small local webp files; plain <img> keeps them instant */
+import { useRef, useState } from "react";
 import type { Card, Profile } from "@/content/types";
-import { pfpSrc, seeded } from "@/lib/accounts";
+import { friend, pfpSrc, seeded } from "@/lib/accounts";
 import { feedSrc } from "@/lib/images";
 import Verified from "./Verified";
-import XPost from "./XPost";
-import { IconCalendar, IconPin } from "./Icons";
+import XPost, { Avatar } from "./XPost";
+import { IconCalendar, IconHeart, IconPin, IconReply, IconRepost, IconViews } from "./Icons";
+
+export type Tab = "posts" | "replies" | "media" | "likes";
+const TABS: { id: Tab; label: string; live: boolean }[] = [
+  { id: "posts", label: "Posts", live: true },
+  { id: "replies", label: "Replies", live: true },
+  { id: "media", label: "Media", live: true },
+  { id: "likes", label: "Likes", live: false }, // visual only
+];
 
 const n = (x: number) => (x >= 1e4 ? (x / 1000).toFixed(1).replace(/\.0$/, "") + "K" : x.toLocaleString("en-IN"));
 
@@ -27,6 +37,15 @@ export const postCount = (p: Profile) => seeded(p.id + "p", 120, 1900);
 /** The X profile page (copied from SOCIALTRACE's Profile): banner, avatar, bio, counts, tabs, then the feed. */
 export default function XProfile({ profile: p, feed }: { profile: Profile; feed: Card[] }) {
   const { followers, following } = followCounts(p);
+  // Tab state lives here, so switching tabs never touches the look timer in PlayClient.
+  const [tab, setTab] = useState<Tab>("posts");
+  const nav = useRef<HTMLElement>(null);
+  const pick = (t: Tab) => {
+    setTab(t);
+    // if the tabs have scrolled under the sticky top bar, bring them back just below it
+    const el = nav.current;
+    if (el && el.getBoundingClientRect().top < 60) window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - 56 });
+  };
   return (
     <section data-testid="profile" data-profile-id={p.id} data-difficulty={p.difficulty}>
       {p.banner ? (
@@ -55,19 +74,81 @@ export default function XProfile({ profile: p, feed }: { profile: Profile; feed:
           <b className="text-white">{n(following)}</b> Following <b className="ml-4 text-white">{n(followers)}</b> Followers
         </p>
       </header>
-      <nav className="mt-3 flex border-b border-zinc-800" aria-hidden>
-        {["Posts", "Replies", "Media", "Likes"].map((x, i) => (
-          <span key={x} className="flex flex-1 justify-center text-[15px] text-zinc-500">
-            <span className={`py-3.5 ${i === 0 ? "border-b-4 border-sky-500 font-bold text-white" : ""}`}>{x}</span>
-          </span>
+      <nav ref={nav} className="mt-3 flex border-b border-zinc-800" role="tablist" data-testid="tabs">
+        {TABS.map((x) => (
+          <button
+            key={x.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === x.id}
+            disabled={!x.live}
+            onClick={() => pick(x.id)}
+            data-testid={`tab-${x.id}`}
+            className={`flex flex-1 justify-center text-[15px] text-zinc-500 outline-none transition-colors ${x.live ? "hover:bg-white/5 focus-visible:bg-white/10" : "cursor-default"}`}
+          >
+            <span className={`py-3.5 ${tab === x.id ? "border-b-4 border-sky-500 font-bold text-white" : ""}`}>{x.label}</span>
+          </button>
         ))}
       </nav>
-      <div data-testid="feed">
+      <div data-testid="feed" hidden={tab !== "posts"}>
         {feed.map((c, i) => (
           <XPost key={i} card={c} profile={p} index={i} />
         ))}
       </div>
+      {tab === "replies" && <RepliesTab profile={p} />}
+      {tab === "media" && <MediaTab profile={p} feed={feed} />}
       <p className="px-4 py-10 text-center font-mono text-[11px] uppercase tracking-[0.25em] text-zinc-600">end of feed</p>
     </section>
+  );
+}
+
+/** Replies tab: the target's own replies to friends, X style ("Replying to @friend"). */
+function RepliesTab({ profile: p }: { profile: Profile }) {
+  const list = p.replies ?? [];
+  if (!list.length) return <p className="p-8 text-center text-zinc-500" data-testid="replies-tab">@{p.handle} hasn&apos;t replied to anyone yet.</p>;
+  return (
+    <div data-testid="replies-tab">
+      {list.map((r, i) => {
+        const to = friend(r.to);
+        const likes = r.likes ?? 1;
+        return (
+          <article key={i} className="flex gap-3 border-b border-zinc-800 px-4 py-3" data-testid="profile-reply">
+            <Avatar src={pfpSrc(p.avatar)} />
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-1 text-[15px] leading-5">
+                <b className="truncate font-bold text-white">{p.name}</b>
+                <Verified v={p.verified ? "blue" : undefined} size={17} />
+                <span className="truncate text-zinc-500">@{p.handle} · {r.time}</span>
+              </div>
+              <p className="text-[13px] text-zinc-500">
+                Replying to <span className="text-sky-400">@{to.handle}</span>
+              </p>
+              <p className="mt-0.5 break-words text-[15px] leading-snug text-[#e7e9ea]">{r.text}</p>
+              <div className="mt-2.5 flex max-w-md justify-between pr-2 text-[13px] text-zinc-500" aria-hidden>
+                <span className="flex items-center gap-1.5"><IconReply size={17} /></span>
+                <span className="flex items-center gap-1.5"><IconRepost size={17} />{Math.floor(likes / 6)}</span>
+                <span className="flex items-center gap-1.5"><IconHeart size={17} />{likes}</span>
+                <span className="flex items-center gap-1.5"><IconViews size={17} />{likes * 23 + 40}</span>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Media tab: a 3-column grid of their own photos and art (like SOCIALTRACE's Media grid). */
+function MediaTab({ profile: p, feed }: { profile: Profile; feed: Card[] }) {
+  const media = feed.filter((c): c is Extract<Card, { kind: "photo" | "art" }> => c.kind === "photo" || c.kind === "art");
+  if (!media.length) return <p className="p-8 text-center text-zinc-500" data-testid="media-tab">No photos or videos yet.</p>;
+  return (
+    <div className="grid grid-cols-3 gap-0.5" data-testid="media-tab">
+      {media.map((c, i) => (
+        <div key={i} className="relative aspect-square overflow-hidden bg-zinc-900" title={`@${p.handle}: ${c.caption}`}>
+          <img src={feedSrc(c.image)} alt="" draggable={false} className="h-full w-full object-cover" />
+        </div>
+      ))}
+    </div>
   );
 }

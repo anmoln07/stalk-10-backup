@@ -15,9 +15,9 @@ calls. The only things stored are a per-device "best this session" and the profi
 
 ![Title](docs/title-1440.png)
 
-| Look | Look (scrolled, Hard) | Round screen | Question | Results |
-|---|---|---|---|---|
-| ![](docs/look-390.png) | ![](docs/look-scrolled-390.png) | ![](docs/round-390.png) | ![](docs/quiz-calc-390.png) | ![](docs/results-390.png) |
+| Look | Look (scrolled, Hard) | Replies tab | Round screen | Question | Results |
+|---|---|---|---|---|---|
+| ![](docs/look-390.png) | ![](docs/look-scrolled-390.png) | ![](docs/tab-replies-390.png) | ![](docs/round-390.png) | ![](docs/quiz-calc-390.png) | ![](docs/results-390.png) |
 
 Laptop: ![](docs/look-1440.png)
 
@@ -25,7 +25,9 @@ Laptop: ![](docs/look-1440.png)
 
 1. Title → **Play** (or Enter) → 3-2-1.
 2. **Round 1 (Easy)**: 10 s look at an X profile (banner, avatar, bio, 📍/joined, followers, Posts/Replies/Media/Likes
-   tabs, then the feed). The feed order is shuffled every play; timestamps stay newest-first. The countdown ring
+   tabs, then the feed). **Posts**, **Replies** (their replies to friends) and **Media** (3-column grid of their
+   photos/art) are clickable during the look without touching the timer; Likes is visual only. Every fact lives
+   on the Posts tab. The feed order is shuffled every play; timestamps stay newest-first. The countdown ring
    sits in the sticky top bar (phones) or the sticky right panel (laptops), so it never scrolls away.
 3. 5 questions, 7 s each. Wrong answers that were a decoy say **"Decoy!"**.
 4. "Round 2 / 3 · Medium" screen (3.6 s, shows the round score), then the next look. Same for Hard.
@@ -109,6 +111,9 @@ Types are in `content/types.ts`; the per-difficulty rules are in `content/rules.
 - Any own post can have `thread: [{ by: "kavya_r", text: "..." }]` – up to 2 friend replies. Friends live in
   `content/friends.ts`. Replies are where most decoys live.
 - Give a post an `id` only if an inference fact points at it.
+- `replies: [{ to: "kavya_r", time: "2h", text: "..." }]` – the Replies tab (≤ 4, ≤ 14 words each). Light
+  chatter; decoys are fine here, but no fact may live only here (the lint checks every answer is on Posts).
+  The Media tab is built from the feed's photo/art posts.
 - ≤ 20 words per post, ≤ 14 per reply. Timestamps look like `2h` / `3d`.
 
 **Facts** (`facts`) – each becomes a question. Kinds:

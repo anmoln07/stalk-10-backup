@@ -86,6 +86,9 @@ export const factKind = (f: Fact): FactKind => f.kind ?? "recall";
 
 export type Species = "cat" | "dog" | "parrot" | "hamster" | "rabbit" | "duck";
 
+/** One of the target's own replies to a friend (shown on the Replies tab). May hold decoys, never facts. */
+export type ProfileReply = { to: string; time: string; text: string; likes?: number };
+
 export type Profile = {
   id: string;
   difficulty: Difficulty;
@@ -100,7 +103,8 @@ export type Profile = {
   joined: string; // "Joined March 2023"
   followers?: number; // decoration; derived from the id when missing
   following?: number;
-  feed: Card[]; // authoring order; shuffled every play
+  feed: Card[]; // authoring order; shuffled every play (the Posts tab)
+  replies?: ProfileReply[]; // the Replies tab: their replies to friends (light; decoys OK, never facts)
   facts: Fact[];
 };
 

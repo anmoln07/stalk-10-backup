@@ -10,7 +10,7 @@
  *     2 games so the localStorage shuffle bags are exercised across reloads
  *   - 1 game with the network switched off (the game must not fetch anything after first load)
  *
- * Every round checks: the look screen may scroll (it's an X feed) but never sideways, the countdown ring
+ * Every round checks: the Replies / Media / Posts tabs open, the look screen may scroll (it's an X feed) but never sideways, the countdown ring
  * stays on screen after scrolling to the bottom, all images loaded, body text ≥ 13 px; every question has
  * 4 unique answers fully on screen and ≥ 56 px tall, exactly one correct; recall answers are on the profile
  * and wrong ones are either flagged decoys or not on the profile; NOT answers are not on the profile and
@@ -105,6 +105,13 @@ async function checkLook(page, label, shots) {
   if (m.minFont < 13) fail(`${label} ${profileId}: body text ${m.minFont}px (< 13px)`);
   if (m.cards < 6) fail(`${label} ${profileId}: only ${m.cards} posts`);
   await noSideScroll(page, `${label} ${profileId} look`);
+  // tabs: Replies and Media open, the timer keeps running, then back to Posts (facts all live on Posts)
+  for (const t of ["replies", "media", "posts"]) {
+    await page.click(`[data-testid="tab-${t}"]`);
+    await sleep(150);
+    const ok = await page.locator(t === "posts" ? '[data-testid="feed"]:not([hidden])' : `[data-testid="${t}-tab"]`).count();
+    if (!ok) fail(`${label} ${profileId}: ${t} tab did not open`);
+  }
   // scrolling is allowed; the ring must stay visible (sticky) at the bottom of the feed
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await sleep(250);

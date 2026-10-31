@@ -5,7 +5,7 @@ import { QUESTIONS_PER_ROUND, ROUNDS, RULES } from "@/content/rules";
 import { buildRun, calcValue, formatCalc, OPTIONS_PER_QUESTION, shuffleFeed, type Question } from "@/lib/buildRun";
 import { drawFromBag, drawProfiles, type BagState, type Bags } from "@/lib/bag";
 import { mulberry32 } from "@/lib/rng";
-import { containsPhrase, minutesOf, postText, profileText, sigWords, stem } from "@/lib/text";
+import { containsPhrase, minutesOf, postText, postsTabText, profileText, sigWords, stem } from "@/lib/text";
 import { imageWords, images, profileImages } from "@/lib/images";
 import { DIFFICULTIES, factKind, type Fact, type Profile } from "@/content/types";
 import { parseParams } from "@/lib/params";
@@ -64,7 +64,7 @@ function checkQuestion(p: Profile, q: Question, ctx: string) {
     const tags = new Set((images[f.image].shows ?? []).flatMap((t) => [t, ...t.split(/\s+/)]).map(stem));
     expect(tags.has(stem(q.answer)) || sigWords(q.answer).every((w) => tags.has(stem(w))), `${ctx}: photo shows "${q.answer}"`).toBe(true);
   } else {
-    expect(containsPhrase(text, q.answer), `${ctx}: answer on profile`).toBe(true);
+    expect(containsPhrase(postsTabText(p), q.answer), `${ctx}: answer on the Posts tab`).toBe(true);
   }
   for (const o of wrong) {
     const isDecoy = (f.decoys ?? []).includes(o);
@@ -175,6 +175,20 @@ describe("content", () => {
           expect(containsPhrase(text, d) || inPicture(shown, d), `${p.id}/${f.id}: decoy "${d}" on profile`).toBe(true);
           expect(lc(d), `${p.id}/${f.id}`).not.toBe(lc(f.answer));
         }
+      }
+    }
+  });
+
+  it("every fact answer is on the Posts tab (never only in Replies or Media)", () => {
+    for (const p of profiles) {
+      const posts = postsTabText(p);
+      const feedImages = p.feed.flatMap((c) => ("image" in c ? [c.image] : []));
+      for (const f of p.facts) {
+        const at = `${p.id}/${f.id}`;
+        if (f.kind === "not") f.present.forEach((x) => expect(containsPhrase(posts, x), `${at}: ${x}`).toBe(true));
+        else if (f.kind === "calc") f.parts.forEach((c) => expect(p.feed.some((x) => "id" in x && x.id === c.post), `${at}: ${c.post}`).toBe(true));
+        else if (f.kind === "photo") expect(feedImages, at).toContain(f.image);
+        else expect(containsPhrase(posts, f.answer), `${at}: ${f.answer}`).toBe(true);
       }
     }
   });

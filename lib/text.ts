@@ -41,12 +41,25 @@ export function headerText(p: Profile): string {
   return [p.name, "@" + p.handle, p.bio, p.location, p.joined].join("\n");
 }
 
+/** What the Posts tab shows: header + all cards + friend replies under them + names. Every fact lives here. */
+export function postsTabText(p: Profile): string {
+  return [headerText(p), ...p.feed.map(cardFullText)].join("\n");
+}
+
+/** What the Replies tab shows: the target's replies to friends (with the friends' names). */
+export function repliesTabText(p: Profile): string {
+  return (p.replies ?? []).flatMap((r) => {
+    const f = friend(r.to);
+    return [f.name, "@" + f.handle, r.text];
+  }).join("\n");
+}
+
 /**
- * Every piece of text the player can read on the profile (header + all cards + replies + names).
+ * Every piece of text the player can read on the profile (all tabs).
  * Timestamps and like/repost/view counts are decoration and are not included.
  */
 export function profileText(p: Profile): string {
-  return [headerText(p), ...p.feed.map(cardFullText)].join("\n");
+  return [postsTabText(p), repliesTabText(p)].join("\n");
 }
 
 /** Text of the area a fact claims to live in. "bio" also covers the 📍 row; "photo" = captions. */

@@ -45,6 +45,10 @@ Nothing here blocks playing or deploying. Each item says what was chosen so Anmo
 
 ## v2 (harder, X-style) — judgement calls
 
+**Decided by Anmol (2026-11-01):** #18–22, #24–28 kept as built. #19: no look-alikes on Easy (keep as is).
+#25: keep the mean look-alikes. #27: 3.6 s round screen is fine. #23: changed — tabs are now clickable
+(see #29).
+
 18. **Easy has 5 profiles, Hard has 4.** Five old profiles stayed Easy (light upgrade: one friend reply with a
     decoy each); five became Medium and four Hard (rewritten with more posts, replies, decoys, NOT / inference /
     photo questions). Mira is Hard so the worked example (Biscuit vs Arjun's dog Cookie, Pune vs Puri) is in.
@@ -59,7 +63,7 @@ Nothing here blocks playing or deploying. Each item says what was chosen so Anmo
     25 km). They never depend on timestamps, because the feed order (and so the shown times) changes every play.
 22. **Timestamps follow position**: after shuffling, the newest time goes on top so the feed reads like a
     real timeline. Friend reply times are worked out from their post's time.
-23. **Tabs are visual only** (Posts active). Making Replies/Media clickable would eat the 10 s; easy to add.
+23. ~~Tabs are visual only.~~ **Decided: clickable** — Posts / Replies / Media work during the look; Likes stays visual only.
 24. **Images are cropped** to 4:3 (phones) / 16:10 (laptops) for square shots and 16:9 for wide ones, so a
     Hard feed isn't all pictures. SOCIALTRACE never crops feed images; here only photo questions depend on
     pictures and their subjects stay in the centre.
@@ -73,3 +77,8 @@ Nothing here blocks playing or deploying. Each item says what was chosen so Anmo
     A full game takes about 1½–2½ minutes; the e2e playthrough was not run (per instructions), only the
     screenshot script.
 28. **Best score storage moved to v2 keys** (`sleuth.best.v2`, `sleuth.bags.v2`), so old /5 bests don't show as /15.
+29. **Clickable tabs (built).** Replies = 2–3 short replies by the target to friends per profile (some hold decoys,
+    e.g. Mira "Cookie ate my sandwich"); Media = 3-column grid of their own photo/art posts (no lightbox, to keep
+    the 10 s). Tab state lives in the profile view, so switching never resets the timer; switching scrolls the
+    tabs back under the sticky bar. Lint + tests check every fact answer (and NOT items, calc clue posts,
+    photo images) is on the Posts tab.
