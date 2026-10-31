@@ -45,6 +45,10 @@ export const distractors: Record<Category, string[]> = {
     "Record player", "Tablet", "Ring light", "Bluetooth speaker", "Action camera", "Instant camera",
     "Game console", "Stylus",
   ],
+  animal: [
+    "Cat", "Dog", "Parrot", "Hamster", "Rabbit", "Duck", "Tortoise", "Goldfish", "Squirrel", "Guinea pig",
+    "Budgie", "Turtle",
+  ],
   music: [
     "Violin", "Ukulele", "Saxophone", "Tabla", "Guitar", "Flute", "Drums", "Sitar", "Cello",
     "Harmonica", "Trumpet", "Harmonium", "Veena",

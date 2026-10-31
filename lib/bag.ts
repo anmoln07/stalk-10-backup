@@ -1,4 +1,5 @@
 import { shuffle, type Rng } from "./rng";
+import { DIFFICULTIES, type Difficulty, type Profile } from "@/content/types";
 
 /** Shuffle bag: every id comes out once before any repeats; never the same id twice in a row. */
 export type BagState = { bag: string[]; last: string | null };
@@ -21,21 +22,51 @@ export function drawFromBag(state: BagState | null, ids: readonly string[], rng:
   return { id, state: { bag: rest, last: id } };
 }
 
-const KEY = "sleuth.bag.v1";
+/** One bag per difficulty, so every Easy profile comes up before an Easy repeats (same for Medium/Hard). */
+export type Bags = Partial<Record<Difficulty, BagState>>;
 
-export function loadBag(): BagState | null {
+/**
+ * Draws one profile per difficulty (Easy, Medium, Hard). `force` (?profile=id) replaces the pick for
+ * that profile's difficulty; the bag still advances.
+ */
+export function drawProfiles(bags: Bags | null, all: readonly Profile[], rng: Rng, force: string | null = null): { chosen: Profile[]; bags: Bags } {
+  const next: Bags = {};
+  const chosen = DIFFICULTIES.map((d) => {
+    const ids = all.filter((p) => p.difficulty === d).map((p) => p.id);
+    const r = drawFromBag(bags?.[d] ?? null, ids, rng);
+    next[d] = r.state;
+    const forced = all.find((p) => p.id === force && p.difficulty === d);
+    return forced ?? all.find((p) => p.id === r.id)!;
+  });
+  return { chosen, bags: next };
+}
+
+const KEY = "sleuth.bags.v2";
+
+const clean = (v: unknown): BagState | undefined => {
+  if (!v || typeof v !== "object" || !Array.isArray((v as BagState).bag)) return undefined;
+  const b = v as BagState;
+  return { bag: b.bag.filter((x: unknown) => typeof x === "string"), last: typeof b.last === "string" ? b.last : null };
+};
+
+export function loadBags(): Bags | null {
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return null;
     const v = JSON.parse(raw);
-    if (!v || !Array.isArray(v.bag)) return null;
-    return { bag: v.bag.filter((x: unknown) => typeof x === "string"), last: typeof v.last === "string" ? v.last : null };
+    if (!v || typeof v !== "object") return null;
+    const out: Bags = {};
+    for (const d of DIFFICULTIES) {
+      const b = clean(v[d]);
+      if (b) out[d] = b;
+    }
+    return out;
   } catch {
     return null;
   }
 }
 
-export function saveBag(state: BagState): void {
+export function saveBags(state: Bags): void {
   try {
     window.localStorage.setItem(KEY, JSON.stringify(state));
   } catch {

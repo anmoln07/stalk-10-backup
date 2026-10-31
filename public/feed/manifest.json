@@ -678,5 +678,462 @@
    "collage",
    "fish"
   ]
+ },
+ {
+  "file": "st-bedroom.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "messy bed with clothes",
+  "shows": [
+   "bed",
+   "clothes",
+   "messy room"
+  ]
+ },
+ {
+  "file": "st-books.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "stacked books and a notebook",
+  "shows": [
+   "books",
+   "notebook",
+   "pens",
+   "study"
+  ]
+ },
+ {
+  "file": "st-cake.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "baked cheesecake in paper",
+  "shows": [
+   "cake",
+   "cheesecake",
+   "dessert"
+  ]
+ },
+ {
+  "file": "st-cat-box.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "fluffy cat asleep in a cardboard box",
+  "shows": [
+   "cat",
+   "box",
+   "sleeping",
+   "fluffy"
+  ]
+ },
+ {
+  "file": "st-cat-laptop.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "cat beside a laptop at night",
+  "shows": [
+   "cat",
+   "laptop",
+   "night"
+  ]
+ },
+ {
+  "file": "st-chicken.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "box of fried chicken",
+  "shows": [
+   "fried chicken",
+   "chicken",
+   "takeaway"
+  ]
+ },
+ {
+  "file": "st-dog-sofa.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "golden dog asleep on a sofa",
+  "shows": [
+   "dog",
+   "sofa",
+   "sleeping",
+   "golden"
+  ]
+ },
+ {
+  "file": "st-dog-tiles.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "golden retriever lying on a tiled floor",
+  "shows": [
+   "dog",
+   "golden retriever",
+   "floor"
+  ]
+ },
+ {
+  "file": "st-fan.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "pedestal fan by a sunny window",
+  "shows": [
+   "fan",
+   "window",
+   "curtains"
+  ]
+ },
+ {
+  "file": "st-foggy-river.webp",
+  "kind": "place",
+  "aspect": "1:1",
+  "desc": "foggy riverside path",
+  "shows": [
+   "fog",
+   "mist",
+   "river",
+   "path"
+  ]
+ },
+ {
+  "file": "st-grapes.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "frosty grapes in a glass bowl",
+  "shows": [
+   "grapes",
+   "fruit",
+   "bowl"
+  ]
+ },
+ {
+  "file": "st-heat-road.webp",
+  "kind": "place",
+  "aspect": "1:1",
+  "desc": "auto-rickshaws on a wet city road",
+  "shows": [
+   "auto rickshaw",
+   "rickshaw",
+   "road",
+   "traffic",
+   "city"
+  ]
+ },
+ {
+  "file": "st-highway.webp",
+  "kind": "place",
+  "aspect": "1:1",
+  "desc": "sunset seen from a car on a highway",
+  "shows": [
+   "sunset",
+   "car",
+   "highway",
+   "road"
+  ]
+ },
+ {
+  "file": "st-houseplant.webp",
+  "kind": "object",
+  "aspect": "1:1",
+  "desc": "money plant on a sunny windowsill",
+  "shows": [
+   "plant",
+   "money plant",
+   "window"
+  ]
+ },
+ {
+  "file": "st-iced-coffee.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "iced coffee on a rainy windowsill",
+  "shows": [
+   "iced coffee",
+   "coffee",
+   "drink",
+   "window"
+  ]
+ },
+ {
+  "file": "st-lanterns.webp",
+  "kind": "place",
+  "aspect": "1:1",
+  "desc": "paper lanterns along a canal at night",
+  "shows": [
+   "lanterns",
+   "canal",
+   "night",
+   "lights"
+  ]
+ },
+ {
+  "file": "st-maple.webp",
+  "kind": "place",
+  "aspect": "1:1",
+  "desc": "red leaves on a wet pavement",
+  "shows": [
+   "leaves",
+   "red",
+   "autumn",
+   "rain"
+  ]
+ },
+ {
+  "file": "st-pho.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "bowl of noodle soup with herbs",
+  "shows": [
+   "noodle soup",
+   "noodles",
+   "soup"
+  ]
+ },
+ {
+  "file": "st-puppy-shoe.webp",
+  "kind": "pet",
+  "aspect": "1:1",
+  "desc": "golden puppy chewing a white sneaker",
+  "shows": [
+   "dog",
+   "puppy",
+   "shoe",
+   "sneaker"
+  ]
+ },
+ {
+  "file": "st-rain-window.webp",
+  "kind": "place",
+  "aspect": "1:1",
+  "desc": "rain drops on a window, grey sky",
+  "shows": [
+   "rain",
+   "window",
+   "clouds"
+  ]
+ },
+ {
+  "file": "st-snacks.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "bowl of chips and a TV remote",
+  "shows": [
+   "chips",
+   "remote",
+   "snack"
+  ]
+ },
+ {
+  "file": "st-spice-bag.webp",
+  "kind": "food",
+  "aspect": "1:1",
+  "desc": "spicy fried chicken with fries and peppers",
+  "shows": [
+   "chicken",
+   "fries",
+   "peppers",
+   "spicy"
+  ]
+ },
+ {
+  "file": "st-sunset.webp",
+  "kind": "place",
+  "aspect": "1:1",
+  "desc": "pink sunset over rooftops",
+  "shows": [
+   "sunset",
+   "rooftops",
+   "pink",
+   "sky"
+  ]
+ },
+ {
+  "file": "st-meme-cat.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "wide-eyed cat close-up",
+  "shows": [
+   "cat",
+   "wide eyes"
+  ]
+ },
+ {
+  "file": "st-meme-dog.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "blurry excited dog",
+  "shows": [
+   "dog",
+   "blur"
+  ]
+ },
+ {
+  "file": "st-meme-frog.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "frog sitting on a tiny chair",
+  "shows": [
+   "frog",
+   "chair"
+  ]
+ },
+ {
+  "file": "st-meme-goat.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "goat standing on a car roof",
+  "shows": [
+   "goat",
+   "car"
+  ]
+ },
+ {
+  "file": "st-meme-possum.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "possum hanging from a washing line",
+  "shows": [
+   "possum",
+   "washing line"
+  ]
+ },
+ {
+  "file": "st-meme-raccoon.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "raccoon peeking out of a bin",
+  "shows": [
+   "raccoon",
+   "bin"
+  ]
+ },
+ {
+  "file": "st-meme-seagull.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "seagull flying off with a chip",
+  "shows": [
+   "seagull",
+   "bird",
+   "chip"
+  ]
+ },
+ {
+  "file": "st-meme-trolley.webp",
+  "kind": "meme",
+  "aspect": "1:1",
+  "desc": "shopping trolley in a canal at night",
+  "shows": [
+   "trolley",
+   "canal"
+  ]
+ },
+ {
+  "file": "st-news-cones.webp",
+  "kind": "news",
+  "aspect": "1:1",
+  "desc": "traffic cones on a road at sunset",
+  "shows": [
+   "traffic cones",
+   "road",
+   "sunset"
+  ]
+ },
+ {
+  "file": "st-news-envelopes.webp",
+  "kind": "news",
+  "aspect": "1:1",
+  "desc": "pile of brown envelopes",
+  "shows": [
+   "envelopes",
+   "letters"
+  ]
+ },
+ {
+  "file": "st-news-flood.webp",
+  "kind": "news",
+  "aspect": "1:1",
+  "desc": "sandbags along a flooded riverside",
+  "shows": [
+   "river",
+   "flood",
+   "sandbags"
+  ]
+ },
+ {
+  "file": "st-news-hurling.webp",
+  "kind": "news",
+  "aspect": "1:1",
+  "desc": "wooden stick and ball on grass",
+  "shows": [
+   "stick",
+   "ball",
+   "grass",
+   "sport"
+  ]
+ },
+ {
+  "file": "st-news-pumpkins.webp",
+  "kind": "news",
+  "aspect": "1:1",
+  "desc": "pumpkins piled at a market",
+  "shows": [
+   "pumpkins",
+   "market"
+  ]
+ },
+ {
+  "file": "st-news-screen.webp",
+  "kind": "news",
+  "aspect": "1:1",
+  "desc": "big outdoor screen with rows of chairs",
+  "shows": [
+   "big screen",
+   "chairs",
+   "outdoor cinema"
+  ]
+ },
+ {
+  "file": "st-art-alley.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "painted rainy lane at night",
+  "shows": [
+   "rain",
+   "lane",
+   "night",
+   "painting"
+  ]
+ },
+ {
+  "file": "st-art-chai.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "illustration of a girl sipping chai",
+  "shows": [
+   "illustration",
+   "chai",
+   "girl"
+  ]
+ },
+ {
+  "file": "st-art-streetcar.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "painted red tram in autumn",
+  "shows": [
+   "tram",
+   "autumn",
+   "painting"
+  ]
+ },
+ {
+  "file": "st-art-terraces.webp",
+  "kind": "art",
+  "aspect": "1:1",
+  "desc": "painted colourful houses by a river",
+  "shows": [
+   "houses",
+   "river",
+   "painting"
+  ]
  }
 ]

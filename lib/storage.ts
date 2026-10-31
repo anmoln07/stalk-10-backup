@@ -1,6 +1,6 @@
 // Per-device conveniences only. Every access is wrapped: storage can be missing or throw.
 
-const BEST = "sleuth.best.v1";
+const BEST = "sleuth.best.v2"; // out of 15
 const LESSON = "sleuth.lesson.v1";
 const SESSION_MS = 6 * 60 * 60 * 1000; // "best this session" = best in the last 6 hours on this device
 

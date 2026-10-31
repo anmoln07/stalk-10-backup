@@ -1,6 +1,6 @@
 # Stalk 10 — v2 plan (harder + X-style)
 
-Status: planned, not built. Decided by Anmol on 2026-11-01.
+Status: **built** (2026-11-01). Decided by Anmol on 2026-11-01. Open points are in QUESTIONS.md ("v2").
 
 ## Keep
 - 4 tap answers per question, 7 s per question (no tighter clock).
@@ -28,3 +28,20 @@ Status: planned, not built. Decided by Anmol on 2026-11-01.
 - **Look time:** 10 s every round (matches the name).
 - **Scrolling allowed** during the look: the X feed is a normal vertical list, and racing to scroll is part of
   the challenge. This replaces the old "fits one screen, no scroll" rule (and its e2e check).
+
+## Built (2026-11-01)
+- [x] X-style profile copied from SOCIALTRACE (`components/x/`): banner, avatar, name + tick, @handle, bio,
+  📍/joined, following/followers, Posts/Replies/Media/Likes tabs (visual only, Posts active), posts with
+  reply/repost/like/view counts, images, meme/news reposts, friend replies in thread style. Phone-first;
+  centred 600 px column with X rails at 1440.
+- [x] Scrolling during the look; ring sticky (top bar on phones, right panel on laptops). Old no-scroll
+  rule removed from the lint and e2e.
+- [x] Decoys (`decoys` per fact, lint-checked to be on the profile and never the answer; "Decoy!" verdict).
+- [x] Look-alikes (`content/lookalikes.ts` + per-fact `lookalikes`).
+- [x] 3 rounds Easy → Medium → Hard, 5 questions each, score N / 15, "Round 2 / 3" screen, ranks for /15,
+  evidence grouped by round. Shuffle bag per difficulty.
+- [x] NOT questions, two-post inference (`calc`), photo questions (manifest `shows` tags).
+- [x] Feed shuffled every play (seeded; timestamps stay newest-first).
+- [x] SOCIALTRACE avatars (friends, meme pages, outlets) and 41 feed images; felt / LED / scanlines /
+  CLASSIFIED stamp on results.
+- [x] 14 profiles: 5 Easy, 5 Medium, 4 Hard.

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useGameParams } from "@/lib/hooks";
 import { profiles } from "@/content/profiles";
 import { feedSrc, profileImages } from "@/lib/images";
+import { friends, memeAccounts, outletAvatars } from "@/content/friends";
 import TitleScreen from "./TitleScreen";
 import PlayClient from "./PlayClient";
 
@@ -12,8 +13,13 @@ type Mode = "title" | "play";
 const warmed: HTMLImageElement[] = [];
 function warmImages() {
   if (warmed.length) return;
-  // Every picture a profile can show (~2 MB), so the game keeps working if the Wi-Fi drops.
-  const files = new Set(["/logo.svg", ...profiles.flatMap((p) => [`/pfp/${p.avatar}`, ...profileImages(p).map(feedSrc)])]);
+  // Every picture a game can show (~3 MB), so the game keeps working if the Wi-Fi drops.
+  const avatars = [...Object.values(friends), ...Object.values(memeAccounts)].map((a) => a.avatar).concat(outletAvatars);
+  const files = new Set([
+    "/logo.svg",
+    ...avatars.map((a) => `/pfp/${a}`),
+    ...profiles.flatMap((p) => [`/pfp/${p.avatar}`, ...profileImages(p).map(feedSrc)]),
+  ]);
   files.forEach((src) => {
     const img = new Image();
     img.decoding = "async";

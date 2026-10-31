@@ -1,4 +1,7 @@
 import type { Question as Q } from "@/lib/buildRun";
+import type { FactKind } from "@/content/types";
+
+const TAGS: Record<FactKind, string | null> = { recall: null, photo: "📷 About a photo", not: "Odd one out", calc: "Do the maths" };
 
 /** `picked`: null = still answering, -1 = timed out, 0..3 = chosen option. */
 export default function Question({
@@ -11,8 +14,15 @@ export default function Question({
   onPick: (i: number) => void;
 }) {
   const locked = picked !== null;
+  const tag = TAGS[q.kind];
   return (
     <div className="flex min-h-0 flex-1 flex-col justify-center gap-6 pb-2 sm:gap-10">
+      <div>
+      {tag && (
+        <p className="rise-in mb-3 inline-flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-400/10 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-amber-300" data-testid="qtag">
+          {tag}
+        </p>
+      )}
       <h1
         className="rise-in text-[clamp(2rem,9.4vw,3rem)] font-black uppercase leading-[0.9] tracking-tighter text-balance sm:text-[clamp(3rem,5.6vw,5.25rem)]"
         aria-live="polite"
@@ -20,6 +30,7 @@ export default function Question({
       >
         {q.question}
       </h1>
+      </div>
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4" role="group" aria-label="Answers">
         {q.options.map((opt, i) => {
           const isRight = i === q.correctIndex;
@@ -38,6 +49,7 @@ export default function Question({
               onClick={() => onPick(i)}
               data-testid="answer"
               data-correct={locked ? String(isRight) : undefined}
+              data-decoy={locked ? String(q.decoys.includes(opt)) : undefined}
               className={`rise-in group flex min-h-[60px] items-center gap-4 rounded-2xl border-2 px-4 py-3 text-left transition-[background,border-color,color,opacity,transform] duration-200 ease-spring active:scale-[.98] disabled:cursor-default sm:min-h-[92px] sm:px-6 ${cls}`}
               style={{ animationDelay: `${60 + i * 50}ms` }}
             >

@@ -9,6 +9,7 @@ import Dot from "./Dot";
 import Tapes from "./Tapes";
 import { useKeys } from "@/lib/hooks";
 import type { GameParams } from "@/lib/params";
+import { TOTAL_QUESTIONS } from "@/content/rules";
 
 // Same cover-sheet layout as SOCIALTRACE's hero: centred title, crop marks, file microtype, scan line.
 export default function TitleScreen({ params, onPlay }: { params: GameParams; onPlay: () => void }) {
@@ -24,7 +25,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
 
   return (
     <main className="relative min-h-[100svh] overflow-hidden bg-ink text-white selection:bg-lime-400 selection:text-black" data-testid="title-screen">
-      {!params.kiosk && <SiteNav right={best ? <span className={pill}>Best <b className="text-lime-400">{best}/5</b></span> : null} />}
+      {!params.kiosk && <SiteNav right={best ? <span className={pill}>Best <b className="text-lime-400">{best}/{TOTAL_QUESTIONS}</b></span> : null} />}
 
       <section className="relative flex min-h-[calc(100svh-5rem)] w-full flex-col items-center justify-center px-4 pb-6 pt-24 sm:min-h-[calc(100svh-7rem)] sm:pt-32">
         <div aria-hidden className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0d_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0d_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
@@ -37,7 +38,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
         {/* file microtype: in the flow on phones (big system text can't collide with the title), pinned on larger screens */}
         <div className="relative z-10 mb-8 flex w-full items-center justify-between gap-3 px-2 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 sm:absolute sm:inset-x-12 sm:top-[7.5rem] sm:mb-0 sm:w-auto sm:px-0 sm:text-xs sm:tracking-[0.25em]">
           <span>Cipher club<span className="hidden sm:inline"> · stall game</span></span>
-          <span className="flex shrink-0 items-center gap-2"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lime-400" />10 sec look</span>
+          <span className="flex shrink-0 items-center gap-2"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lime-400" />3 rounds · 10 sec look</span>
         </div>
 
         <div className="rise-in relative z-10 text-center">

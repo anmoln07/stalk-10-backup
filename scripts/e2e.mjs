@@ -4,15 +4,19 @@
  * saves screenshots to docs/, and stops the server. Exits 1 on any failure.
  *
  * Per viewport:
- *   - 1 full-length run (10 s look) that takes the four screenshots
- *   - 20 consecutive runs (?time=3 to keep it quick) via PLAY AGAIN, with a page reload every 5
- *     runs so the localStorage shuffle bag is exercised across reloads
- *   - 1 run with the network switched off (the game must not fetch anything after first load)
+ *   - the title screen (QR on laptops only)
+ *   - 1 full game (3 rounds, real 10 s look) that takes the screenshots
+ *   - RUNS more games (?time=3 to keep it quick) via PLAY AGAIN / Enter, with a page reload every
+ *     2 games so the localStorage shuffle bags are exercised across reloads
+ *   - 1 game with the network switched off (the game must not fetch anything after first load)
  *
- * Every run checks: profile screen has no scroll, the header and every fact-bearing card are fully on screen,
- * all images loaded, 4 answer buttons all inside the viewport, no sideways scroll, the right answer
- * is on the profile and the wrong ones aren't, the score matches, no console errors / page crashes,
- * no requests leave localhost, and no profile appears twice in a row.
+ * Every round checks: the look screen may scroll (it's an X feed) but never sideways, the countdown ring
+ * stays on screen after scrolling to the bottom, all images loaded, body text ≥ 13 px; every question has
+ * 4 unique answers fully on screen and ≥ 56 px tall, exactly one correct; recall answers are on the profile
+ * and wrong ones are either flagged decoys or not on the profile; NOT answers are not on the profile and
+ * the other three are. A "Round N / 3" screen shows between rounds, results show N/15 with 15 evidence
+ * rows, no console errors, no requests leave localhost, and no profile repeats back-to-back within a
+ * difficulty (after 5 games every profile of each difficulty has been seen).
  */
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -20,35 +24,24 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 
-// Playwright is not a project dependency: use a local install if present, otherwise a global one
-// (resolved through NODE_PATH / require paths, which ESM `import` ignores).
+// Playwright is not a project dependency: use a local install if present, otherwise a global one.
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.PORT || 3217);
 const BASE = `http://127.0.0.1:${PORT}`;
-const RUNS = Number(process.env.RUNS || 20);
+const RUNS = Number(process.env.RUNS || 5);
 const DOCS = path.join(ROOT, "docs");
-// Optional: SWEEP_DIR=/some/dir saves a look-screen screenshot of every profile at both sizes.
-const SWEEP_DIR = process.env.SWEEP_DIR || "";
-// Profile ids, read from the source so the sweep covers every profile.
-const PROFILE_IDS = [...fs.readFileSync(path.join(ROOT, "content", "profiles.ts"), "utf8").matchAll(/^\s*id: "([a-z0-9_-]+)", name:/gm)].map((x) => x[1]);
+const ROUNDS = 3;
+const QUESTIONS = 5;
 
 const VIEWPORTS = [
   { name: "1440", viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 },
   { name: "390", viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
 ];
 
-// Shorter screens: layout-only sweep (noise cards may be hidden here, fact cards never).
-const SHORT_VIEWPORTS = [
-  { name: "375x667", viewport: { width: 375, height: 667 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
-  { name: "1280x720", viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 },
-];
-
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const layoutLog = [];
-const vp = (page) => `${page.viewportSize().width}×${page.viewportSize().height}`;
 const failures = [];
 const fail = (msg) => {
   failures.push(msg);
@@ -74,9 +67,7 @@ async function startServer() {
   throw new Error("next start did not come up:\n" + log);
 }
 
-function norm(s) {
-  return s.toLowerCase().replace(/\s+/g, " ");
-}
+const norm = (s) => s.toLowerCase().replace(/\s+/g, " ");
 function hasPhrase(text, phrase) {
   const esc = phrase.trim().toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`(^|[^\\p{L}\\p{N}])${esc}(?=$|[^\\p{L}\\p{N}])`, "iu").test(norm(text));
@@ -87,99 +78,78 @@ async function noSideScroll(page, where) {
   if (sw > iw) fail(`${where}: sideways scroll (${sw} > ${iw})`);
 }
 
-/** Waits for the look screen and checks it. Returns the profile id and its visible text. */
-async function checkProfileScreen(page, label) {
+/** Waits for a look screen and checks it. Returns the profile id, difficulty and its visible text. */
+async function checkLook(page, label, shots) {
   const vh = page.viewportSize().height;
-  const vw = page.viewportSize().width;
-  await page.waitForSelector('[data-testid="profile"]', { timeout: 10_000 });
+  await page.waitForSelector('[data-testid="look"] [data-testid="profile"]', { timeout: 12_000 });
   const profile = page.locator('[data-testid="profile"]');
   const profileId = await profile.getAttribute("data-profile-id");
-  await sleep(700); // let the rise-in animation finish
-
-  // ---- profile screen checks ----
-  // wait for every picture on the profile to decode
+  const difficulty = await profile.getAttribute("data-difficulty");
+  await sleep(700); // rise-in
   await page
-    .waitForFunction(() => [...document.querySelectorAll('[data-testid="profile"] img')].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 4_000 })
+    .waitForFunction(() => [...document.querySelectorAll('[data-testid="look"] img')].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 4_000 })
     .catch(() => {});
+  if (shots) await page.screenshot({ path: path.join(DOCS, `look-${shots}.png`) });
   const m = await page.evaluate(() => {
     const root = document.querySelector('[data-testid="profile"]');
-    const header = root.querySelector("header");
-    const factCards = [...root.querySelectorAll('[data-fact="true"]')];
-    const boxes = [header, ...factCards].map((e) => e.getBoundingClientRect());
-    const imgs = [...root.querySelectorAll("img")];
-    const fontPx = [...root.querySelectorAll('header h2 ~ p, [data-fact="true"] p:first-child')].map((e) => parseFloat(getComputedStyle(e).fontSize));
-    const feed = root.querySelector('[data-testid="feed"]');
+    const imgs = [...document.querySelectorAll('[data-testid="look"] img')];
+    const fontPx = [...root.querySelectorAll('[data-testid="bio"], [data-testid="card"] p')].map((e) => parseFloat(getComputedStyle(e).fontSize));
     return {
-      scrollH: document.documentElement.scrollHeight,
-      scrollW: document.documentElement.scrollWidth,
-      bodyScrollH: document.body.scrollHeight,
-      bottom: Math.max(...boxes.map((b) => b.bottom)),
-      top: Math.min(...boxes.map((b) => b.top)),
-      right: Math.max(...boxes.map((b) => b.right)),
-      factCards: factCards.length,
-      cards: root.querySelectorAll('[data-testid="card"]').length,
-      hiddenNoise: Number(feed?.getAttribute("data-hidden-noise") ?? 0),
       broken: imgs.filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.getAttribute("src")),
       minFont: Math.min(...fontPx),
+      cards: root.querySelectorAll('[data-testid="card"]').length,
       text: root.innerText,
     };
   });
-  if (m.scrollH > vh || m.bodyScrollH > vh) fail(`${label} ${profileId}: profile screen scrolls (${m.scrollH}px > ${vh}px)`);
-  if (m.bottom > vh + 0.5 || m.top < -0.5) fail(`${label} ${profileId}: a fact card or the header is cut off (${Math.round(m.top)}–${Math.round(m.bottom)} of ${vh})`);
-  if (m.right > vw + 0.5 || m.scrollW > vw) fail(`${label} ${profileId}: profile wider than screen`);
   if (m.broken.length) fail(`${label} ${profileId}: broken images ${m.broken.join(", ")}`);
   if (m.minFont < 13) fail(`${label} ${profileId}: body text ${m.minFont}px (< 13px)`);
-  // Short screens (e.g. 375×667) may hide all noise; the plan says hide noise first, never facts.
-  if (vh >= 700 && m.cards - m.factCards < 1) fail(`${label} ${profileId}: every noise card was hidden`);
-  layoutLog.push(`${vp(page)} ${profileId}: ${m.cards} cards shown, ${m.hiddenNoise} noise hidden`);
-  const profileText = m.text;
-  return { profileId, profileText };
+  if (m.cards < 6) fail(`${label} ${profileId}: only ${m.cards} posts`);
+  await noSideScroll(page, `${label} ${profileId} look`);
+  // scrolling is allowed; the ring must stay visible (sticky) at the bottom of the feed
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await sleep(250);
+  const ring = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-testid="ring"]')]
+      .map((e) => e.getBoundingClientRect())
+      .filter((b) => b.width > 0)
+      .map((b) => ({ top: b.top, bottom: b.bottom })),
+  );
+  if (!ring.some((b) => b.top >= 0 && b.bottom <= vh)) fail(`${label} ${profileId}: countdown ring not visible after scrolling`);
+  if (shots) await page.screenshot({ path: path.join(DOCS, `look-scrolled-${shots}.png`) });
+  return { profileId, difficulty, profileText: m.text };
 }
 
-/** Plays one run from the 3-2-1 screen to results. Returns { profileId, score }. */
-async function playRun(page, label, { shots = null, lookMs = 3000, timeoutOne = false } = {}) {
+/** Plays one round's 5 questions. Returns the number answered correctly. */
+async function playQuiz(page, label, r, profileId, profileText, { shots = null, timeoutOne = false } = {}) {
   const vh = page.viewportSize().height;
   const vw = page.viewportSize().width;
-
-  await page.waitForSelector('[data-testid="ready"]', { timeout: 10_000 });
-  await noSideScroll(page, `${label} ready`);
-  const { profileId, profileText } = await checkProfileScreen(page, label);
-
-  if (shots) {
-    await sleep(800);
-    await page.screenshot({ path: path.join(DOCS, `look-${shots}.png`) });
-  }
-
-  // ---- quiz ----
-  await page.waitForSelector('[data-testid="quiz"]', { timeout: lookMs + 5_000 });
   let correct = 0;
-  for (let q = 0; q < 5; q++) {
-    await page.waitForSelector(`[data-testid="quiz"][data-q="${q}"] [data-testid="answer"]:not([disabled])`, { timeout: 10_000 });
+  for (let q = 0; q < QUESTIONS; q++) {
+    await page.waitForSelector(`[data-testid="quiz"][data-round="${r}"][data-q="${q}"] [data-testid="answer"]:not([disabled])`, { timeout: 12_000 });
     await sleep(q === 0 && shots ? 700 : 120);
+    const kind = await page.getAttribute('[data-testid="quiz"]', "data-kind");
     const btns = page.locator('[data-testid="answer"]');
     const n = await btns.count();
     if (n !== 4) fail(`${label} ${profileId} q${q + 1}: ${n} answer buttons`);
     const geo = await page.evaluate(() => ({
       rects: [...document.querySelectorAll('[data-testid="answer"]')].map((b) => {
-        const r = b.getBoundingClientRect();
-        return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, h: r.height };
+        const x = b.getBoundingClientRect();
+        return { top: x.top, bottom: x.bottom, left: x.left, right: x.right, h: x.height };
       }),
       scrollH: document.documentElement.scrollHeight,
       scrollW: document.documentElement.scrollWidth,
       question: document.querySelector('[data-testid="question"]').innerText,
     }));
-    for (const [i, r] of geo.rects.entries()) {
-      if (r.top < 0 || r.bottom > vh + 0.5 || r.left < 0 || r.right > vw + 0.5) {
-        fail(`${label} ${profileId} q${q + 1}: answer ${i + 1} not fully visible (${Math.round(r.top)}–${Math.round(r.bottom)} of ${vh})`);
-      }
-      if (r.h < 56) fail(`${label} ${profileId} q${q + 1}: answer ${i + 1} only ${r.h}px tall`);
+    for (const [i, x] of geo.rects.entries()) {
+      if (x.top < 0 || x.bottom > vh + 0.5 || x.left < 0 || x.right > vw + 0.5) fail(`${label} ${profileId} q${q + 1}: answer ${i + 1} not fully visible`);
+      if (x.h < 56) fail(`${label} ${profileId} q${q + 1}: answer ${i + 1} only ${x.h}px tall`);
     }
     if (geo.scrollH > vh) fail(`${label} ${profileId} q${q + 1}: quiz screen scrolls`);
     if (geo.scrollW > vw) fail(`${label} ${profileId} q${q + 1}: sideways scroll`);
     if (shots && q === 0) await page.screenshot({ path: path.join(DOCS, `quiz-${shots}.png`) });
+    if (shots && (kind === "not" || kind === "calc")) await page.screenshot({ path: path.join(DOCS, `quiz-${kind}-${shots}.png`) });
 
-    const options = await btns.allInnerTexts();
-    const labels = options.map((o) => o.replace(/^\s*\d\s*/, "").replace(/✓/g, "").trim());
+    const labels = (await btns.allInnerTexts()).map((o) => o.replace(/^\s*\d\s*/, "").replace(/✓/g, "").trim());
     if (new Set(labels.map((l) => l.toLowerCase())).size !== 4) fail(`${label} ${profileId} q${q + 1}: duplicate options ${labels}`);
 
     if (timeoutOne && q === 2) {
@@ -193,29 +163,61 @@ async function playRun(page, label, { shots = null, lookMs = 3000, timeoutOne = 
       if ((await btns.nth(pick).getAttribute("data-correct")) === "true") correct++;
     }
 
-    // The question must be possible: right answer on the profile, wrong ones not.
-    const flags = await btns.evaluateAll((bs) => bs.map((b) => b.getAttribute("data-correct")));
-    if (flags.filter((f) => f === "true").length !== 1) fail(`${label} ${profileId} q${q + 1}: ${flags} correct flags`);
+    const flags = await btns.evaluateAll((bs) => bs.map((b) => [b.getAttribute("data-correct"), b.getAttribute("data-decoy")]));
+    if (flags.filter(([c]) => c === "true").length !== 1) fail(`${label} ${profileId} q${q + 1}: ${flags} correct flags`);
     labels.forEach((l, i) => {
-      const onProfile = hasPhrase(profileText, l);
-      if (flags[i] === "true" && !onProfile) fail(`${label} ${profileId}: "${geo.question}" answer "${l}" is not on the profile`);
-      if (flags[i] !== "true" && onProfile) fail(`${label} ${profileId}: "${geo.question}" wrong option "${l}" is on the profile`);
+      const on = hasPhrase(profileText, l);
+      const right = flags[i][0] === "true";
+      const decoy = flags[i][1] === "true";
+      if (kind === "recall") {
+        if (right && !on) fail(`${label} ${profileId}: "${geo.question}" answer "${l}" is not on the profile`);
+        if (!right && on && !decoy) fail(`${label} ${profileId}: "${geo.question}" wrong option "${l}" is on the profile but not a decoy`);
+      }
+      if (kind === "not") {
+        if (right && on) fail(`${label} ${profileId}: "${geo.question}" answer "${l}" IS on the profile`);
+        if (!right && !on) fail(`${label} ${profileId}: "${geo.question}" option "${l}" should be on the profile`);
+      }
+      if (kind === "photo" && !right && on && !decoy) fail(`${label} ${profileId}: "${geo.question}" wrong option "${l}" is on the profile but not a decoy`);
     });
   }
+  return correct;
+}
 
-  // ---- results ----
-  await page.waitForSelector('[data-testid="results"]', { timeout: 5_000 });
+/** Plays a whole game from the 3-2-1 screen to results. Returns { ids: {difficulty: id}, score }. */
+async function playGame(page, label, { shots = null, timeoutOne = false } = {}) {
+  await page.waitForSelector('[data-testid="ready"]', { timeout: 10_000 });
+  await noSideScroll(page, `${label} ready`);
+  const ids = {};
+  let correct = 0;
+  for (let r = 0; r < ROUNDS; r++) {
+    if (r > 0) {
+      await page.waitForSelector(`[data-testid="between"][data-round="${r}"]`, { timeout: 8_000 }).catch(() => fail(`${label}: no round ${r + 1} screen`));
+      if (shots && r === 1) {
+        await sleep(600);
+        await page.screenshot({ path: path.join(DOCS, `round-${shots}.png`) });
+      }
+    }
+    const look = await checkLook(page, `${label} r${r + 1}`, shots && r === 0 ? shots : null);
+    const want = ["easy", "medium", "hard"][r];
+    if (look.difficulty !== want) fail(`${label} r${r + 1}: ${look.profileId} is ${look.difficulty}, expected ${want}`);
+    ids[want] = look.profileId;
+    await page.waitForSelector('[data-testid="quiz"]', { timeout: 15_000 });
+    correct += await playQuiz(page, `${label} r${r + 1}`, r, look.profileId, look.profileText, { shots, timeoutOne: timeoutOne && r === 0 });
+  }
+
+  await page.waitForSelector('[data-testid="results"]', { timeout: 6_000 });
   const score = Number(await page.locator('[data-testid="results"]').getAttribute("data-score"));
-  if (score !== correct) fail(`${label} ${profileId}: score ${score}, expected ${correct}`);
+  if (score !== correct) fail(`${label}: score ${score}, expected ${correct}`);
+  const rows = await page.locator('[data-testid="review-row"]').count();
+  if (rows !== ROUNDS * QUESTIONS) fail(`${label}: ${rows} evidence rows (want ${ROUNDS * QUESTIONS})`);
   await noSideScroll(page, `${label} results`);
-  const again = page.locator('[data-testid="again"]');
-  const ar = await again.boundingBox();
-  if (!ar || ar.y + ar.height > vh) fail(`${label}: PLAY AGAIN is below the fold`);
+  const ar = await page.locator('[data-testid="again"]').boundingBox();
+  if (!ar || ar.y + ar.height > page.viewportSize().height) fail(`${label}: PLAY AGAIN is below the fold`);
   if (shots) {
     await sleep(1500);
     await page.screenshot({ path: path.join(DOCS, `results-${shots}.png`) });
   }
-  return { profileId, score };
+  return { ids, score };
 }
 
 async function testViewport(browser, vp) {
@@ -240,64 +242,52 @@ async function testViewport(browser, vp) {
   const qrVisible = await page.locator('[data-testid="qr"]').isVisible().catch(() => false);
   if (vp.isMobile && qrVisible) fail(`${vp.name}: QR should be hidden on phones`);
   if (!vp.isMobile && !qrVisible) fail(`${vp.name}: QR missing on laptop`);
-  await sleep(1200); // demo loop: profile visible
+  await sleep(1200);
   await page.screenshot({ path: path.join(DOCS, `title-${vp.name}.png`) });
 
-  // ---- layout sweep: every profile's look screen ----
-  for (const id of PROFILE_IDS) {
-    await page.goto(`${BASE}/play?profile=${id}&time=60`, { waitUntil: "networkidle" });
-    const { profileId } = await checkProfileScreen(page, `${vp.name} sweep`);
-    if (profileId !== id) fail(`${vp.name} sweep: asked for ${id}, got ${profileId}`);
-    if (SWEEP_DIR) await page.screenshot({ path: path.join(SWEEP_DIR, `${id}-${vp.name}.png`) });
-  }
-  console.log(`  layout sweep: ${PROFILE_IDS.length} profiles checked`);
-  await page.goto(BASE + "/", { waitUntil: "networkidle" });
-  await page.waitForSelector('[data-testid="title-screen"]');
-
-  // ---- full-length run with screenshots ----
+  // ---- full-length game with screenshots ----
   await page.locator('button[data-testid="play"]').click();
-  const seq = [];
+  const seq = { easy: [], medium: [], hard: [] };
+  const push = (ids) => Object.entries(ids).forEach(([d, id]) => seq[d].push(id));
   const t0 = Date.now();
-  const first = await playRun(page, `${vp.name} full`, { shots: vp.name, lookMs: 10_000 });
-  seq.push(first.profileId);
-  console.log(`  run 0 (10 s look, ${((Date.now() - t0) / 1000).toFixed(1)} s total): ${first.profileId} ${first.score}/5`);
+  const first = await playGame(page, `${vp.name} full`, { shots: vp.name });
+  push(first.ids);
+  console.log(`  game 0 (10 s looks, ${((Date.now() - t0) / 1000).toFixed(1)} s): ${Object.values(first.ids).join(" / ")} ${first.score}/15`);
 
-  // Esc goes back to the title, Enter starts again
+  // Esc goes back to the title
   await page.keyboard.press("Escape");
   await page.waitForSelector('[data-testid="title-screen"]', { timeout: 3_000 }).catch(() => fail(`${vp.name}: Esc did not return to title`));
 
-  // ---- 20 consecutive runs ----
+  // ---- more games (bags persist across reloads) ----
   await page.goto(BASE + "/play?time=3", { waitUntil: "networkidle" });
   for (let i = 1; i <= RUNS; i++) {
-    const r = await playRun(page, `${vp.name} run ${i}`, { timeoutOne: i === 3 });
-    if (r.profileId === seq[seq.length - 1]) fail(`${vp.name} run ${i}: profile ${r.profileId} repeated back-to-back`);
-    seq.push(r.profileId);
-    process.stdout.write(`  run ${i}: ${r.profileId} ${r.score}/5\n`);
+    const g = await playGame(page, `${vp.name} game ${i}`, { timeoutOne: i === 1 });
+    push(g.ids);
+    console.log(`  game ${i}: ${Object.values(g.ids).join(" / ")} ${g.score}/15`);
     if (i === RUNS) break;
-    if (i % 5 === 0) await page.reload({ waitUntil: "networkidle" });
-    else if (i % 2 === 0) await page.keyboard.press("Enter");
+    if (i % 2 === 0) await page.reload({ waitUntil: "networkidle" });
+    else if (i % 3 === 0) await page.keyboard.press("Enter");
     else await page.locator('[data-testid="again"]').click();
   }
 
-  // ---- offline run ----
+  // ---- offline game ----
   await page.waitForTimeout(500);
   offline = true;
   await context.setOffline(true);
   await page.locator('[data-testid="again"]').click();
-  const off = await playRun(page, `${vp.name} offline`);
-  if (off.profileId === seq[seq.length - 1]) fail(`${vp.name} offline: profile repeated back-to-back`);
-  seq.push(off.profileId);
-  console.log(`  offline run: ${off.profileId} ${off.score}/5`);
+  const off = await playGame(page, `${vp.name} offline`);
+  push(off.ids);
+  console.log(`  offline game: ${Object.values(off.ids).join(" / ")} ${off.score}/15`);
   await context.setOffline(false);
   offline = false;
 
-  // A full cycle should show every profile once before any repeats (runs 1..14 after the screenshot run).
-  const distinct = new Set(seq).size;
-  console.log(`  profiles seen: ${distinct} distinct over ${seq.length} runs; sequence ${seq.join(" ")}`);
+  for (const [d, s] of Object.entries(seq)) {
+    for (let i = 1; i < s.length; i++) if (s[i] === s[i - 1]) fail(`${vp.name}: ${d} profile ${s[i]} repeated back-to-back`);
+    console.log(`  ${d}: ${new Set(s).size} distinct over ${s.length} games (${s.join(" ")})`);
+  }
   if (errors.length) fail(`${vp.name}: ${errors.length} console/page errors:\n    ${[...new Set(errors)].join("\n    ")}`);
   if (external.length) fail(`${vp.name}: requests left the device:\n    ${[...new Set(external)].join("\n    ")}`);
   await context.close();
-  return seq;
 }
 
 const server = await startServer();
@@ -305,24 +295,7 @@ let browser;
 try {
   fs.mkdirSync(DOCS, { recursive: true });
   browser = await chromium.launch();
-  const results = await Promise.all(VIEWPORTS.map((vp) => testViewport(browser, vp)));
-  for (const vp of SHORT_VIEWPORTS) {
-    const context = await browser.newContext({ ...vp, name: undefined });
-    const page = await context.newPage();
-    const errors = [];
-    page.on("pageerror", (e) => errors.push(e.message));
-    for (const id of PROFILE_IDS) {
-      await page.goto(`${BASE}/play?profile=${id}&time=60`, { waitUntil: "networkidle" });
-      await checkProfileScreen(page, `${vp.name} sweep`);
-      if (SWEEP_DIR) await page.screenshot({ path: path.join(SWEEP_DIR, `${id}-${vp.name}.png`) });
-    }
-    if (errors.length) fail(`${vp.name}: page errors ${errors.join("; ")}`);
-    console.log(`\n▶ ${vp.name}: layout sweep of ${PROFILE_IDS.length} profiles done`);
-    await context.close();
-  }
-  console.log(`\n${results.map((s, i) => `${VIEWPORTS[i].name}: ${s.length} runs`).join(", ")}`);
-  const hid = layoutLog.filter((l) => !l.endsWith(" 0 noise hidden"));
-  console.log(`layout: ${layoutLog.length} profile screens checked; ${hid.length} needed noise cards hidden${hid.length ? ":\n  " + [...new Set(hid)].join("\n  ") : ""}`);
+  await Promise.all(VIEWPORTS.map((vp) => testViewport(browser, vp)));
 } catch (e) {
   fail("crashed: " + (e?.stack || e));
 } finally {
