@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="#A3E635" stroke-linecap="round" stroke-linejoin="round">
+  <!-- speech bubble -->
+  <path d="M36.8 80.6 A36 36 0 1 0 18.2 60.3 L14 86 Z" stroke-width="7"/>
+  <!-- radar ring, open where the sweep passes -->
+  <path d="M71.73 40.82 A21 21 0 1 1 34.8 35.96" stroke-width="6"/>
+  <!-- sweep -->
+  <path d="M52 48 L67.96 17.98 A34 34 0 0 1 82.29 32.56 Z" fill="#A3E635" stroke-width="2"/>
+  <!-- centre + blip -->
+  <circle cx="52" cy="48" r="6.5" fill="#A3E635" stroke="none"/>
+  <circle cx="41.5" cy="29.8" r="5" fill="#A3E635" stroke="none"/>
+</svg>

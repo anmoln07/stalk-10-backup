@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #0a0a08;
+  --fg: #e7e9ea;
+  --accent: #a3e635;
+  --paper: #eceae2;
+  --spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--ink);
+  color: var(--fg);
+}
+body {
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: var(--accent);
+  color: #000;
+}
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* subtle film grain + vignette so the black isn't flat */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(1200px 600px at 80% -10%, rgba(163, 230, 53, 0.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(163, 230, 53, 0.05), transparent 60%);
+}
+
+/* ---------- Dot (from shared style guide) ---------- */
+@keyframes dotfloat{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-4px) rotate(4deg)}}
+.dot-float{animation:dotfloat 2.6s ease-in-out infinite}
+@keyframes dothalo{0%,100%{opacity:.35}50%{opacity:.8}}
+.dot-halo{animation:dothalo 2.6s ease-in-out infinite}
+@keyframes dotblink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.dot-blink{animation:dotblink 3.8s infinite}
+@media (prefers-reduced-motion:reduce){.dot-float,.dot-halo,.dot-blink{animation:none}}
+
+/* ---------- Marquee ---------- */
+@keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+.marquee-track { animation: marquee 22s linear infinite; }
+
+/* ---------- Game motion ---------- */
+@keyframes pop-in { 0% { opacity: 0; transform: scale(.6) } 60% { opacity: 1; transform: scale(1.08) } 100% { transform: scale(1) } }
+.pop-in { animation: pop-in .45s var(--spring) both; }
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: none } }
+.rise-in { animation: rise-in .5s var(--spring) both; }
+
+@keyframes urgent { 0%,100% { transform: scale(1) } 50% { transform: scale(1.08) } }
+.urgent { animation: urgent .5s ease-in-out infinite; }
+
+.look-out {
+  transition: filter .6s var(--spring), transform .6s var(--spring), opacity .6s var(--spring);
+  filter: blur(18px);
+  transform: translateX(-28%) scale(.96);
+  opacity: 0;
+}
+
+@keyframes drain { from { transform: scaleX(1) } to { transform: scaleX(0) } }
+@keyframes drain-colour { 0%, 70% { background: #a3e635 } 72%, 100% { background: #ef4444 } }
+.timer-fill { transform-origin: left; animation: drain linear forwards, drain-colour linear forwards; }
+
+@keyframes shake { 0%,100% { transform: translateX(0) } 20% { transform: translateX(-7px) } 40% { transform: translateX(7px) } 60% { transform: translateX(-4px) } 80% { transform: translateX(4px) } }
+.shake { animation: shake .4s ease-in-out; }
+
+@keyframes flash { from { opacity: .55 } to { opacity: 0 } }
+.flash { animation: flash .7s ease-out forwards; }
+
+/* ---------- Title demo loop (7s) ---------- */
+@keyframes demo-profile {
+  0%, 4% { opacity: 0; transform: translateY(10px); filter: blur(0) }
+  9%, 44% { opacity: 1; transform: none; filter: blur(0) }
+  52%, 100% { opacity: 0; transform: translateX(-36px) scale(.96); filter: blur(10px) }
+}
+@keyframes demo-quiz {
+  0%, 50% { opacity: 0; transform: translateY(14px) scale(.94) }
+  57%, 93% { opacity: 1; transform: none }
+  100% { opacity: 0; transform: none }
+}
+@keyframes demo-pick {
+  0%, 70% { background: rgba(255,255,255,.06); color: #e7e9ea; border-color: rgba(255,255,255,.12) }
+  73%, 100% { background: #a3e635; color: #000; border-color: #a3e635 }
+}
+@keyframes demo-tap {
+  0%, 64% { opacity: 0; transform: translate(40px, 40px) scale(1) }
+  69% { opacity: 1; transform: translate(0, 0) scale(1) }
+  72% { opacity: 1; transform: translate(0, 0) scale(.75) }
+  80%, 100% { opacity: 0; transform: translate(0, 0) scale(1) }
+}
+@keyframes demo-ring { 0%, 9% { stroke-dashoffset: 0 } 46%, 100% { stroke-dashoffset: 113 } }
+.demo-profile { animation: demo-profile 7s var(--spring) infinite; }
+.demo-quiz { animation: demo-quiz 7s var(--spring) infinite; }
+.demo-pick { animation: demo-pick 7s steps(1, end) infinite; }
+.demo-tap { animation: demo-tap 7s var(--spring) infinite; }
+.demo-ring { animation: demo-ring 7s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track, .pop-in, .rise-in, .urgent, .shake, .flash,
+  .demo-profile, .demo-quiz, .demo-pick, .demo-tap, .demo-ring { animation: none !important; }
+  .demo-quiz, .demo-tap { opacity: 0; }
+  .look-out { transition: opacity .2s; filter: none; transform: none; }
+  .timer-fill { animation-name: drain, drain-colour !important; }
+}
