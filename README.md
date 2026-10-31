@@ -1,4 +1,6 @@
-# 10-Second Sleuth
+# stalk10
+
+(Formerly "10-Second Sleuth". The repo, Vercel project and storage keys keep the old `ten-second-sleuth` / `sleuth` names.)
 
 **Look at a profile for 10 seconds. Then see how much you remember.**
 

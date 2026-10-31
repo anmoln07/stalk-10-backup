@@ -6,7 +6,7 @@ import "./globals.css";
 const anton = localFont({ src: "./fonts/anton.woff2", variable: "--font-anton", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "10-Second Sleuth",
+  title: "stalk10",
   description: "Look at a profile for 10 seconds. Then see how much you remember. A memory game about made-up people.",
   robots: { index: true, follow: false },
 };

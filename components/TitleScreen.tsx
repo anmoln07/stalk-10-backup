@@ -41,9 +41,8 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
         </div>
 
         <div className="rise-in relative z-10 text-center">
-          <h1 className="select-none text-[14.5vw] font-black uppercase leading-[0.82] tracking-tighter sm:text-[11vw] lg:text-[8.5vw] 2xl:text-[130px]">
-            <span className="whitespace-nowrap">10-Second</span><br />
-            <span className="bg-gradient-to-b from-white to-zinc-600 bg-clip-text text-transparent">Sleuth</span>
+          <h1 className="select-none whitespace-nowrap text-[21vw] font-black uppercase leading-[0.82] tracking-tighter sm:text-[16vw] lg:text-[13vw] 2xl:text-[200px]" aria-label="stalk10">
+            Stalk<span className="bg-gradient-to-b from-white to-zinc-600 bg-clip-text text-transparent">10</span>
           </h1>
           <p className="mx-auto mt-7 max-w-2xl font-mono text-[13px] uppercase leading-relaxed tracking-[0.18em] text-zinc-400 sm:text-base sm:tracking-widest">
             <span className="block sm:inline">Look for 10 seconds.</span>{" "}
