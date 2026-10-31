@@ -1,90 +1,83 @@
 "use client";
-import SiteNav from "./SiteNav";
+import { useEffect, useState } from "react";
+import { getBest } from "@/lib/storage";
+import SiteNav, { pill } from "./SiteNav";
 import Magnetic from "./Magnetic";
 import QR from "./QR";
 import DemoLoop from "./DemoLoop";
 import Dot from "./Dot";
+import Tapes from "./Tapes";
 import { useKeys } from "@/lib/hooks";
 import type { GameParams } from "@/lib/params";
 
-const MARQUEE = Array.from({ length: 8 }, () => ["LOOK", "REMEMBER", "TAP"]).flat();
-
+// Same cover-sheet layout as SOCIALTRACE's hero: centred title, crop marks, file microtype, scan line.
 export default function TitleScreen({ params, onPlay }: { params: GameParams; onPlay: () => void }) {
+  const [best, setBest] = useState<number | null>(null);
+  useEffect(() => setBest(getBest()), []);
   useKeys((e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       onPlay();
     }
   });
+  const mark = "absolute h-6 w-6 border-zinc-600";
 
   return (
-    <main className="relative flex min-h-[100dvh] flex-col overflow-hidden" data-testid="title-screen">
-      {!params.kiosk && <SiteNav />}
+    <main className="relative min-h-[100svh] overflow-hidden bg-ink text-white selection:bg-lime-400 selection:text-black" data-testid="title-screen">
+      {!params.kiosk && <SiteNav right={best ? <span className={pill}>Best <b className="text-lime-400">{best}/5</b></span> : null} />}
 
-      <section className="relative z-10 mx-auto grid w-full max-w-[1500px] flex-1 items-center gap-8 px-5 pb-6 pt-24 sm:px-10 lg:grid-cols-[1.3fr_1fr] lg:gap-6 lg:pb-10 lg:pt-28">
-        <div>
-          <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500 sm:text-xs">
-            <span className="h-1.5 w-1.5 rounded-full bg-lime-400" /> A memory game about made-up people
-          </p>
-          <h1 className="mt-4 font-black uppercase leading-[0.82] tracking-tighter">
-            <span className="block whitespace-nowrap text-[13.5vw] sm:text-[11vw] lg:text-[8.6vw] 2xl:text-[8.4rem]">10-Second</span>
-            <span className="block text-[13.5vw] text-lime-400 sm:text-[11vw] lg:text-[8.6vw] 2xl:text-[8.4rem]">Sleuth</span>
+      <section className="relative flex min-h-[calc(100svh-5rem)] w-full flex-col items-center justify-center px-4 pb-6 pt-24 sm:min-h-[calc(100svh-7rem)] sm:pt-32">
+        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0d_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0d_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
+        <div aria-hidden className="scan pointer-events-none absolute inset-x-0 top-0 h-px bg-lime-400/70 shadow-[0_0_24px_4px_rgba(163,230,53,.35)]" />
+        <span aria-hidden className={`${mark} left-4 top-20 border-l border-t sm:left-8 sm:top-24`} />
+        <span aria-hidden className={`${mark} right-4 top-20 border-r border-t sm:right-8 sm:top-24`} />
+        <span aria-hidden className={`${mark} bottom-2 left-4 border-b border-l sm:left-8`} />
+        <span aria-hidden className={`${mark} bottom-2 right-4 border-b border-r sm:right-8`} />
+
+        {/* file microtype: in the flow on phones (big system text can't collide with the title), pinned on larger screens */}
+        <div className="relative z-10 mb-8 flex w-full items-center justify-between gap-3 px-2 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 sm:absolute sm:inset-x-12 sm:top-[7.5rem] sm:mb-0 sm:w-auto sm:px-0 sm:text-xs sm:tracking-[0.25em]">
+          <span>Cipher club<span className="hidden sm:inline"> · stall game</span></span>
+          <span className="flex shrink-0 items-center gap-2"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lime-400" />10 sec look</span>
+        </div>
+
+        <div className="rise-in relative z-10 text-center">
+          <h1 className="select-none text-[14.5vw] font-black uppercase leading-[0.82] tracking-tighter sm:text-[11vw] lg:text-[8.5vw] 2xl:text-[130px]">
+            <span className="whitespace-nowrap">10-Second</span><br />
+            <span className="bg-gradient-to-b from-white to-zinc-600 bg-clip-text text-transparent">Sleuth</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-snug text-zinc-300 sm:text-2xl">
-            Look at a profile for <span className="font-bold text-fg">10 seconds</span>. Then see how much you remember.
+          <p className="mx-auto mt-7 max-w-2xl font-mono text-[13px] uppercase leading-relaxed tracking-[0.18em] text-zinc-400 sm:text-base sm:tracking-widest">
+            <span className="block sm:inline">Look for 10 seconds.</span>{" "}
+            <span className="block sm:inline">
+              <span className="relative inline-block"><span className="text-white">Remember</span>
+                <span aria-hidden className="draw-line absolute inset-x-0 -bottom-1 h-[3px] bg-lime-400" /></span> what you saw.</span>
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-5">
+          <div className="mt-10 flex flex-col items-center gap-4">
             <Magnetic>
               <button
                 type="button"
                 onClick={onPlay}
-                autoFocus
                 data-testid="play"
-                className="inline-flex min-h-[64px] items-center gap-3 rounded-full bg-lime-400 px-9 py-5 font-mono text-lg font-bold uppercase tracking-wider text-black transition-colors duration-200 hover:bg-white"
+                className="group inline-flex min-h-[56px] items-center gap-3 rounded-full bg-lime-400 px-9 py-5 font-mono text-lg font-bold uppercase text-black outline-none transition-colors duration-200 hover:bg-white focus-visible:bg-white"
               >
                 Play
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden>
-                  <path d="M7 4.5v15l12-7.5z" />
-                </svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="transition-transform group-hover:translate-x-1"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
               </button>
             </Magnetic>
-            <span className="hidden font-mono text-xs uppercase tracking-[0.25em] text-zinc-500 [@media(pointer:fine)]:inline">
-              or press <kbd className="rounded border border-white/15 px-1.5 py-0.5 text-zinc-300">Enter</kbd>
-            </span>
+            <span className="hidden font-mono text-xs uppercase tracking-widest text-zinc-500 sm:inline">[ or press enter ]</span>
           </div>
         </div>
 
-        <div className="relative lg:pb-36">
-          <div className="pointer-events-none absolute -left-2 -top-8 z-10 flex items-center gap-2 sm:-top-10 lg:-left-6">
-            <Dot size={46} animated />
-            <span className="rounded-full rounded-bl-sm bg-paper px-3 py-1.5 text-[13px] font-semibold text-zinc-900 shadow-[3px_3px_0_#a3e635]">
-              Blink and it&apos;s gone!
-            </span>
+        <div className="rise-in relative z-10 mt-14 w-full max-w-md [animation-delay:150ms]">
+          <div className="pointer-events-none absolute -left-2 -top-9 z-10 flex items-center gap-2">
+            <Dot size={44} animated />
+            <span className="rounded-full rounded-bl-sm bg-paper px-3 py-1.5 text-[13px] font-semibold text-zinc-900 shadow-[3px_3px_0_#a3e635]">Blink and it&apos;s gone!</span>
           </div>
           <DemoLoop />
         </div>
+
+        <div className="absolute bottom-6 right-8 z-10 hidden xl:block"><QR /></div>
       </section>
-
-      <div className="pointer-events-none absolute bottom-[84px] right-8 z-20 lg:right-12">
-        <div className="pointer-events-auto">
-          <QR />
-        </div>
-      </div>
-
-      <div className="relative z-10 -rotate-1 overflow-hidden border-y-2 border-black bg-lime-400 py-3 text-black" aria-hidden>
-        <div className="marquee-track flex w-max gap-6 whitespace-nowrap font-mono text-sm font-bold uppercase tracking-[0.3em] sm:text-base">
-          {[0, 1].map((k) => (
-            <span key={k} className="flex gap-6">
-              {MARQUEE.map((w, i) => (
-                <span key={i} className="flex items-center gap-6">
-                  {w} <span className="text-[10px]">●</span>
-                </span>
-              ))}
-            </span>
-          ))}
-        </div>
-      </div>
-      <div className="h-4" />
+      <Tapes />
     </main>
   );
 }

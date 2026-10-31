@@ -12,9 +12,9 @@ export default function Question({
 }) {
   const locked = picked !== null;
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col justify-center gap-6 pb-2 sm:gap-10">
       <h1
-        className="rise-in my-auto py-4 text-[clamp(2rem,9.4vw,3rem)] font-black uppercase leading-[0.9] tracking-tighter text-balance sm:text-[clamp(3rem,5.6vw,5.25rem)]"
+        className="rise-in text-[clamp(2rem,9.4vw,3rem)] font-black uppercase leading-[0.9] tracking-tighter text-balance sm:text-[clamp(3rem,5.6vw,5.25rem)]"
         aria-live="polite"
         data-testid="question"
       >

@@ -59,6 +59,7 @@ export default function PlayClient({ params, onTitle }: { params: GameParams; on
   const [qi, setQi] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [results, setResults] = useState<boolean[]>([]);
+  const [picks, setPicks] = useState<number[]>([]);
 
   const go = useCallback((p: Phase) => {
     setPhase(p);
@@ -70,6 +71,7 @@ export default function PlayClient({ params, onTitle }: { params: GameParams; on
     setQi(0);
     setPicked(null);
     setResults([]);
+    setPicks([]);
     go("ready");
   }, [newRun, go]);
 
@@ -103,6 +105,7 @@ export default function PlayClient({ params, onTitle }: { params: GameParams; on
     if (!run || phase !== "quiz" || picked !== null) return;
     setPicked(i);
     setResults((r) => [...r, i === run.questions[qi].correctIndex]);
+    setPicks((p) => [...p, i]);
   };
 
   const toTitle = onTitle;
@@ -141,7 +144,7 @@ export default function PlayClient({ params, onTitle }: { params: GameParams; on
         score={score}
         total={run.questions.length}
         kiosk={params.kiosk}
-        seed={seed}
+        review={run.questions.map((q, k) => ({ question: q.question, answer: q.answer, picked: picks[k] >= 0 ? q.options[picks[k]] : null, right: !!results[k] }))}
         onAgain={start}
         onTitle={toTitle}
       />

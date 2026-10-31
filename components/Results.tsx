@@ -4,7 +4,7 @@ import { rankFor } from "@/content/ranks";
 import { lessons } from "@/content/lessons";
 import { recordScore, nextLessonIndex } from "@/lib/storage";
 import { useIdle, useKeys } from "@/lib/hooks";
-import SiteNav from "./SiteNav";
+import SiteNav, { pill } from "./SiteNav";
 import Magnetic from "./Magnetic";
 import Dot from "./Dot";
 
@@ -14,14 +14,14 @@ export default function Results({
   score,
   total,
   kiosk,
-  seed,
+  review,
   onAgain,
   onTitle,
 }: {
   score: number;
   total: number;
   kiosk: boolean;
-  seed: number;
+  review: { question: string; answer: string; picked: string | null; right: boolean }[];
   onAgain: () => void;
   onTitle: () => void;
 }) {
@@ -67,70 +67,75 @@ export default function Results({
   });
 
   return (
-    <main
-      className="relative flex min-h-[100dvh] flex-col px-5 pb-8 pt-20 sm:px-10 sm:pt-28"
-      data-testid="results"
-      data-score={score}
-    >
-      {!kiosk && <SiteNav onHome={onTitle} />}
-      <div className="mx-auto grid w-full max-w-[1200px] flex-1 items-center gap-6 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
+    <main className="relative min-h-[100dvh] bg-ink px-4 pb-10 pt-24 text-white sm:px-8 sm:pt-28" data-testid="results" data-score={score}>
+      {!kiosk && <SiteNav onHome={onTitle} right={<span className={pill}>Best <b className="text-lime-400" data-testid="best">{best ?? score}/{total}</b></span>} />}
+      <div className="mx-auto grid w-full max-w-6xl items-start gap-10 lg:grid-cols-[1fr_1.1fr] lg:gap-16 lg:pt-6">
+        {/* score + rank + actions */}
         <div className="text-center lg:text-left">
           <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500 sm:text-xs">You spotted</p>
-          <p className="mt-2 font-anton leading-none tracking-tight sm:mt-3" aria-label={`${score} out of ${total}`} data-testid="score">
-            <span className="text-[34vw] text-lime-400 sm:text-[12rem] lg:text-[15rem]">{shown}</span>
-            <span className="text-[17vw] text-zinc-600 sm:text-[6rem] lg:text-[7.5rem]"> / {total}</span>
+          <p className="mt-2 font-anton leading-none tracking-tight" aria-label={`${score} out of ${total}`} data-testid="score">
+            <span className="text-[30vw] text-lime-400 sm:text-[11rem] lg:text-[13rem]">{shown}</span>
+            <span className="text-[14vw] text-zinc-600 sm:text-[5rem] lg:text-[6rem]"> / {total}</span>
           </p>
-          <h1 className="pop-in mt-3 font-black uppercase leading-[0.82] tracking-tighter sm:mt-5" style={{ animationDelay: `${score * 160}ms` }}>
+          <h1 className="pop-in mt-2 font-black uppercase leading-[0.82] tracking-tighter" style={{ animationDelay: `${score * 160}ms` }}>
             <span className="block font-mono text-[10px] font-normal tracking-[0.25em] text-zinc-500 sm:text-xs">Your rank</span>
-            <span className="mt-2 block text-[13vw] sm:text-7xl" data-testid="rank">
-              {rank.name}
-            </span>
+            <span className="mt-2 block text-[12vw] sm:text-7xl" data-testid="rank">{rank.name}</span>
           </h1>
-        </div>
-
-        <div className="flex flex-col gap-5 sm:gap-6">
-          <div className="flex items-end gap-3">
-            <Dot size={72} animated />
-            <p className="relative mb-6 rounded-2xl rounded-bl-sm border border-white/10 bg-white/[0.05] px-4 py-3 text-lg font-semibold leading-snug sm:text-xl">
-              {rank.line}
-            </p>
+          <div className="mt-5 flex items-center justify-center gap-3 lg:justify-start">
+            <Dot size={52} animated />
+            <p className="rounded-2xl rounded-bl-sm border border-white/10 bg-white/[0.05] px-4 py-2.5 text-left text-base font-semibold leading-snug sm:text-lg">{rank.line}</p>
           </div>
-          <div className="-rotate-[0.6deg] rounded-2xl bg-paper px-5 py-4 text-zinc-900 shadow-[6px_6px_0_#a3e635] sm:px-6 sm:py-5">
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">The lesson</p>
-            <p className="mt-1.5 text-[17px] font-medium leading-snug sm:text-lg" data-testid="lesson">
-              {lesson ?? " "}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
             <Magnetic>
               <button
                 type="button"
                 onClick={onAgain}
                 data-testid="again"
-                autoFocus
-                className="min-h-[64px] rounded-full bg-lime-400 px-9 py-5 font-mono text-lg font-bold uppercase tracking-wider text-black transition-colors duration-200 hover:bg-white"
+                className="group inline-flex min-h-[56px] items-center gap-3 rounded-full bg-lime-400 px-9 py-5 font-mono text-lg font-bold uppercase text-black outline-none transition-colors duration-200 hover:bg-white focus-visible:bg-white"
               >
                 Play again
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="transition-transform group-hover:translate-x-1"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
               </button>
             </Magnetic>
             <button
               type="button"
               onClick={onTitle}
               data-testid="to-title"
-              className="min-h-[56px] rounded-full border border-white/15 px-6 font-mono text-sm font-bold uppercase tracking-wider text-zinc-300 transition-colors hover:border-white hover:text-white"
+              className="min-h-[48px] font-mono text-xs uppercase tracking-widest text-zinc-500 transition-colors hover:text-white"
             >
-              Back to title
+              [ back to title ]
             </button>
           </div>
-          <p className="text-center font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500 sm:text-xs lg:text-left">
-            Best this session: <span className="text-fg" data-testid="best">{best ?? score} / {total}</span>
-            <span className="hidden [@media(pointer:fine)]:inline"> · Enter = again · Esc = title</span>
+        </div>
+
+        {/* what was on the profile: the lesson, made concrete */}
+        <div className="-rotate-[0.4deg] bg-paper px-5 pb-5 pt-6 text-zinc-900 shadow-[0_30px_80px_rgba(0,0,0,.7)] sm:px-8 sm:pt-8">
+          <div className="flex items-end justify-between gap-3 border-b-2 border-zinc-900 pb-3">
+            <h2 className="text-2xl font-black uppercase tracking-tighter sm:text-4xl">The evidence</h2>
+            <p className="pb-1 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 sm:text-xs">{score} of {total} spotted</p>
+          </div>
+          <ol>
+            {review.map((r, i) => (
+              <li key={i} className="flex gap-3 border-b border-zinc-900/15 py-3 last:border-0" data-testid="review-row">
+                <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full font-mono text-xs font-black ${r.right ? "bg-lime-400 text-black" : "bg-zinc-900 text-white"}`} aria-label={r.right ? "right" : "wrong"}>
+                  {r.right ? "✓" : "✕"}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm leading-snug text-zinc-600">{r.question}</p>
+                  <p className="mt-0.5 font-bold leading-snug">
+                    {r.answer}
+                    {!r.right && <span className="ml-2 font-mono text-[11px] font-normal uppercase tracking-wider text-zinc-500">{r.picked ? `you said ${r.picked}` : "time ran out"}</span>}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-3 border-t-2 border-zinc-900 pt-3 font-mono text-[11px] uppercase leading-relaxed tracking-[0.12em] text-zinc-700 sm:text-xs" data-testid="lesson">
+            {lesson ?? " "}
           </p>
         </div>
       </div>
-      <p className="mt-6 text-center font-mono text-[9px] uppercase tracking-[0.25em] text-zinc-700" aria-hidden>
-        run #{seed}
-      </p>
+      <p className="mt-8 hidden text-center font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-600 [@media(pointer:fine)]:block">Enter = play again · Esc = title</p>
     </main>
   );
 }

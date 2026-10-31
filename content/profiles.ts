@@ -230,8 +230,8 @@ export const profiles: Profile[] = [
       { kind: "art",   time: "3d", image: "art-08.webp", caption: "sunset, but make it acrylic" },
     ],
     facts: [
-      { id: "city",   category: "city",   question: "Where is Leela a local?",               answer: "Pondicherry",   where: "bio"   },
-      { id: "colour", category: "colour", question: "What is Leela's colour?",               answer: "Orange",        where: "bio"   },
+      { id: "city",   category: "city",   question: "Which city is Leela a local of?",        answer: "Pondicherry",   where: "bio"   },
+      { id: "colour", category: "colour", question: "Which colour does Leela call hers?",     answer: "Orange",        where: "bio"   },
       { id: "hobby",  category: "hobby",  question: "What class does Leela have tonight?",   answer: "Origami",       where: "text"  },
       { id: "food",   category: "food",   question: "What did Leela have for breakfast?",    answer: "Dosa",          where: "photo" },
       { id: "team",   category: "team",   question: "Which team is Leela rooting for?",      answer: "Golden Geckos", where: "text"  },
@@ -253,7 +253,7 @@ export const profiles: Profile[] = [
       { kind: "art",   time: "3d", image: "art-09.webp", caption: "paper fish for my wall" },
     ],
     facts: [
-      { id: "city",   category: "city",   question: "Where is Aarav a local?",                 answer: "Vizag",         where: "bio"   },
+      { id: "city",   category: "city",   question: "Which city is Aarav a local of?",                 answer: "Vizag",         where: "bio"   },
       { id: "drink",  category: "drink",  question: "What drink is Aarav's whole personality?", answer: "Coconut water", where: "bio"   },
       { id: "hobby",  category: "hobby",  question: "What lessons did Aarav start?",           answer: "Surfing",       where: "text"  },
       { id: "trip",   category: "trip",   question: "Where is Aarav going in April?",          answer: "Varkala",       where: "text"  },
