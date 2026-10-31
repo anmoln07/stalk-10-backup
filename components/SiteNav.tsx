@@ -12,10 +12,10 @@ export default function SiteNav({ onHome, right }: { onHome?: () => void; right?
           onHome();
         }}
         className="relative flex min-h-[36px] items-center gap-2 font-mono text-base font-bold uppercase tracking-tighter sm:text-lg"
-        aria-label="stalk10, back to title"
+        aria-label="Stalk 10, back to title"
       >
         <Image src="/logo.svg" alt="" width={28} height={28} priority />
-        <span>STALK<span className="text-lime-400">10</span></span>
+        <span>STALK <span className="text-lime-400">10</span></span>
       </a>
       <div className="relative flex min-h-[36px] items-center gap-2">{right}</div>
     </nav>

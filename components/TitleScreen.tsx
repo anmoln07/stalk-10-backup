@@ -41,8 +41,8 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
         </div>
 
         <div className="rise-in relative z-10 text-center">
-          <h1 className="select-none whitespace-nowrap text-[21vw] font-black uppercase leading-[0.82] tracking-tighter sm:text-[16vw] lg:text-[13vw] 2xl:text-[200px]" aria-label="stalk10">
-            Stalk<span className="bg-gradient-to-b from-white to-zinc-600 bg-clip-text text-transparent">10</span>
+          <h1 className="select-none text-[24vw] font-black uppercase leading-[0.82] tracking-tighter sm:text-[13vw] lg:text-[8.5vw] 2xl:text-[130px]" aria-label="Stalk 10">
+            Stalk<br /><span className="bg-gradient-to-b from-white to-zinc-600 bg-clip-text text-transparent">10</span>
           </h1>
           <p className="mx-auto mt-7 max-w-2xl font-mono text-[13px] uppercase leading-relaxed tracking-[0.18em] text-zinc-400 sm:text-base sm:tracking-widest">
             <span className="block sm:inline">Look for 10 seconds.</span>{" "}
@@ -66,7 +66,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
           </div>
         </div>
 
-        <div className="rise-in relative z-10 mt-14 w-full max-w-md [animation-delay:150ms]">
+        <div className="rise-in relative z-10 mt-14 w-full max-w-md lg:mt-10 [animation-delay:150ms]">
           <div className="pointer-events-none absolute -left-2 -top-9 z-10 flex items-center gap-2">
             <Dot size={44} animated />
             <span className="rounded-full rounded-bl-sm bg-paper px-3 py-1.5 text-[13px] font-semibold text-zinc-900 shadow-[3px_3px_0_#a3e635]">Blink and it&apos;s gone!</span>

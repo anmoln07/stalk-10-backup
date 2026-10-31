@@ -1,6 +1,6 @@
-# stalk10
+# Stalk 10
 
-(Formerly "10-Second Sleuth". The repo, Vercel project and storage keys keep the old `ten-second-sleuth` / `sleuth` names.)
+(Formerly "10-Second Sleuth". The GitHub repo and storage keys keep the old `ten-second-sleuth` / `sleuth` names; the Vercel project is `stalk-10`.)
 
 **Look at a profile for 10 seconds. Then see how much you remember.**
 
