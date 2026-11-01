@@ -1,329 +1,224 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { getBest } from "@/lib/storage";
 import QR from "./QR";
 import { useKeys } from "@/lib/hooks";
 import type { GameParams } from "@/lib/params";
-import { TOTAL_QUESTIONS } from "@/content/rules";
-import Scrawl, { Loop, Strike } from "./land/Scrawl";
-import Doodle from "./land/Doodles";
+import { TOTAL_QUESTIONS, QUESTIONS_PER_ROUND, RULES } from "@/content/rules";
+import { ranks } from "@/content/ranks";
+import { profiles } from "@/content/profiles";
+import Window from "./os/Window";
+import PlayApp from "./os/PlayApp";
+import { Clock, Cube, Glider, Halftone, Sky } from "./os/Art";
 
 /**
- * Landing page, after artemartemartem.com: white page, heavy black type, neon-green marker scrawls,
- * a pill of "surveillance" footage that grows to full screen on scroll, a hover list over it,
- * a statement with marker-redacted words that lift as you scroll, and a black footer with the Play button + QR.
+ * Landing, after typesafe.ai: a soft cloud sky, a news window, a huge grotesk headline, and PLAY.app + QR on the
+ * first screen (it's a stall game: nobody should need to scroll to start). Below: a green "STALK.OS" desktop of
+ * 1-bit windows showing how a round works, a dark FAQ, and a wireframe-cube footer. Green, black, white and grey.
  */
 
-// What you'll have to remember, each tied to the moment in /video/feed.mp4 where the tracker locks on.
-const FACTS = [
-  { text: "her cat's name", scrawl: "Biscuit?", t: 0.4 },
-  { text: "where she lives", scrawl: "Pune!", t: 0.8 },
-  { text: "what she's drinking", scrawl: "×3", t: 2.1 },
-  { text: "where she's flying", scrawl: "Goa", t: 3.7 },
-  { text: "her new shoes", scrawl: "yellow?", t: 8.5 },
-  { text: "what's just noise", scrawl: "decoy!", t: 10.4 },
+const count = (d: string) => profiles.filter((p) => p.difficulty === d).length;
+const ROWS = (["easy", "medium", "hard"] as const).map((d) => ({ d, rule: RULES[d], n: count(d) }));
+
+const FAQ: [string, string][] = [
+  ["Is anyone in this real?", "No. Every profile, friend, photo caption and reply is made up for the game."],
+  ["What's a decoy?", "Something that is on the profile, but not the answer. We ask about her cat; her friend's dog Cookie is a decoy."],
+  ["What's a look-alike?", "A near miss that was never on the profile, like Biscotti when the cat is Biscuit. Hard rounds use them."],
+  ["How does scoring work?", `One point per right answer, ${TOTAL_QUESTIONS} in total. Your rank goes from ${ranks[ranks.length - 1].name} to ${ranks[0].name}.`],
+  ["Can I play on my phone?", "Yes. Scan the QR code on the stall laptop and it opens right here."],
+  ["Do you save anything?", "Only your best score, on this device. No accounts, no tracking."],
 ];
 
-// Statement copy. [x] = marker-redacted until you scroll to it.
-const STATEMENT =
-  "You had ten seconds. Her cat is [Biscuit], not [Cookie]. She lives in [Pune], drinks [iced lattes] and flies to [Goa] on [the 15th]. Got all that? Now do it [fifteen times].";
-
-const clamp = (v: number) => Math.min(1, Math.max(0, v));
-const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+function Corner({ c }: { c: string }) { return <span aria-hidden className={`absolute h-3 w-3 border-black ${c}`} />; }
 
 export default function TitleScreen({ params, onPlay }: { params: GameParams; onPlay: () => void }) {
   const [best, setBest] = useState<number | null>(null);
-  const [active, setActive] = useState(0);
-  const [hovering, setHovering] = useState(false);
-  const [footIn, setFootIn] = useState(false);
-  const [statIn, setStatIn] = useState(false);
-  // Phones (portrait screens) get a portrait cut of the footage so it fills the pill and full screen without cropping.
-  const [tall, setTall] = useState<boolean | null>(null);
-  useEffect(() => {
-    const check = () => setTall(window.innerHeight > window.innerWidth);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-  const stage = useRef<HTMLElement>(null);
-  const pill = useRef<HTMLDivElement>(null);
-  const video = useRef<HTMLVideoElement>(null);
-  const heroL = useRef<HTMLDivElement>(null);
-  const heroR = useRef<HTMLDivElement>(null);
-  const heroHint = useRef<HTMLDivElement>(null);
-  const list = useRef<HTMLDivElement>(null);
-  const statement = useRef<HTMLDivElement>(null);
-  const foot = useRef<HTMLElement>(null);
-  const hoverRef = useRef(false);
-  const listOn = useRef(false);
-  hoverRef.current = hovering;
-
   useEffect(() => setBest(getBest()), []);
   useKeys((e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !(e.target instanceof HTMLButtonElement) && !(e.target instanceof HTMLElement && e.target.closest("summary"))) {
       e.preventDefault();
-      onPlay();
+      window.dispatchEvent(new Event("stalk10:launch"));
     }
   });
 
-  // One scroll loop drives everything; it writes styles directly so React doesn't re-render per frame.
-  useEffect(() => {
-    let raf = 0;
-    let lastActive = -1;
-    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const run = () => {
-      raf = 0;
-      const vh = window.innerHeight, vw = document.documentElement.clientWidth;
-      const st = stage.current, p = pill.current;
-      if (st && p) {
-        const s = -st.getBoundingClientRect().top;
-        const G = 0.8 * vh, LEND = 1.9 * vh, END = 2.6 * vh;
-        const g = clamp(s / G), sh = clamp((s - LEND) / (END - LEND));
-        const e = ease(g) * (1 - ease(sh));
-        const small = vw < 768;
-        const pw = small ? 148 : 150, ph = small ? 240 : 250;
-        p.style.width = `${pw + (vw - pw) * e}px`;
-        p.style.height = `${ph + (vh - ph) * e}px`;
-        p.style.borderRadius = `${(pw / 2) * (1 - e)}px`;
-        const fade = 1 - clamp(g * 1.8);
-        const push = ease(g);
-        if (heroL.current) { heroL.current.style.opacity = `${fade}`; heroL.current.style.transform = `translateX(${-push * 12}vw)`; }
-        if (heroR.current) { heroR.current.style.opacity = `${fade}`; heroR.current.style.transform = `translateX(${push * 12}vw)`; }
-        if (heroHint.current) heroHint.current.style.opacity = `${1 - clamp(g * 4)}`;
-        const lp = (s - G) / (LEND - G);
-        const lo = clamp((s - G * 0.85) / (0.15 * vh)) * (1 - clamp(sh * 3));
-        const wasOn = listOn.current;
-        listOn.current = lo > 0.2;
-        if (listOn.current && !wasOn && video.current) { try { video.current.currentTime = FACTS[lastActive < 0 ? 0 : lastActive].t; } catch {} }
-        if (list.current) {
-          list.current.style.opacity = `${lo}`;
-          list.current.style.pointerEvents = lo > 0.5 ? "auto" : "none";
-          list.current.style.transform = `translateY(${(1 - clamp(lp * 3 + 0.3)) * 6}vh)`;
-        }
-        if (!hoverRef.current && lp >= 0 && lp <= 1) {
-          const i = Math.min(FACTS.length - 1, Math.floor(lp * FACTS.length));
-          if (i !== lastActive) { lastActive = i; setActive(i); }
-        }
-      }
-      // Marker redactions lift as each word crosses ~70% of the screen.
-      const ws = statement.current?.querySelectorAll<HTMLElement>("[data-redact]");
-      ws?.forEach((w) => {
-        const top = w.getBoundingClientRect().top;
-        w.style.setProperty("--r", `${clamp((vh * 0.8 - top) / (vh * 0.2))}`);
-      });
-      if (ws?.length && ws[ws.length - 1].getBoundingClientRect().top < vh * 0.55) setStatIn(true);
-      // Footer: a black pill that opens into the full section.
-      const f = foot.current;
-      if (f) {
-        const top = f.getBoundingClientRect().top;
-        const k = ease(clamp((vh - top) / (vh * 0.75)));
-        f.style.clipPath = `inset(${(1 - k) * 8}% ${(1 - k) * 40}% ${(1 - k) * 70}% ${(1 - k) * 40}% round ${(1 - k) * 160 + 0}px)`;
-        if (k > 0.85) setFootIn(true);
-      }
-      if (still && video.current && !video.current.paused) video.current.pause();
-    };
-    const on = () => { if (!raf) raf = requestAnimationFrame(run); };
-    run();
-    window.addEventListener("scroll", on, { passive: true });
-    window.addEventListener("resize", on);
-    return () => {
-      window.removeEventListener("scroll", on);
-      window.removeEventListener("resize", on);
-      cancelAnimationFrame(raf);
-    };
-  }, []);
-
-  // While the list is up, the footage stays on the active fact: it jumps to the moment the tracker locks on
-  // and replays that ~2 s clip, so the picture always matches the highlighted line.
-  const activeRef = useRef(0);
-  activeRef.current = active;
-  useEffect(() => {
-    const v = video.current;
-    if (!v || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const seek = () => { try { v.currentTime = FACTS[activeRef.current].t; void v.play().catch(() => {}); } catch {} };
-    if (listOn.current) {
-      if (v.readyState >= 1) seek();
-      else v.addEventListener("loadedmetadata", seek, { once: true });
-    }
-  }, [active]);
-  useEffect(() => {
-    const v = video.current;
-    if (!v) return;
-    const hold = () => {
-      if (!listOn.current) return;
-      const t = FACTS[activeRef.current].t;
-      if (v.currentTime < t - 0.05 || v.currentTime > t + 1.6) { try { v.currentTime = t; } catch {} }
-    };
-    v.addEventListener("timeupdate", hold);
-    return () => v.removeEventListener("timeupdate", hold);
-  }, []);
-
-  const playBtn = (big = false, testId?: string) => (
-    <button
-      type="button"
-      onClick={onPlay}
-      data-testid={testId}
-      className={`play-btn group relative inline-flex items-center justify-center gap-3 rounded-full font-bold tracking-[-0.02em] outline-none ${
-        big ? "h-[76px] bg-neon px-12 text-[28px] text-black" : "h-[58px] bg-black px-9 text-[20px] text-white"
-      }`}
-    >
-      <span className="relative z-10">Play</span>
-      <svg width={big ? 28 : 22} height={big ? 28 : 22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="relative z-10 transition-transform duration-300 group-hover:translate-x-1">
-        <path d="M5 12h14M12 5l7 7-7 7" />
-      </svg>
-      <Loop className={`play-loop ${big ? "text-white" : ""}`} />
-    </button>
-  );
-
   return (
-    <main className="land relative bg-white font-sans text-black selection:bg-neon selection:text-black" data-testid="title-screen">
-
+    <main className="ts relative bg-white font-inter text-[#141414] selection:bg-desk selection:text-black" data-testid="title-screen">
+      {/* ---------- Nav ---------- */}
       {!params.kiosk && (
-        <nav className="fixed inset-x-0 top-0 z-50 flex items-start justify-between px-3 pt-2 text-[17px] font-semibold tracking-[-0.03em] text-white mix-blend-difference sm:px-4 sm:text-[22px]">
-          <a href="#how" className="nav-link">how it works</a>
-          <span className="absolute left-1/2 -translate-x-1/2">stalk 10</span>
-          <button type="button" onClick={onPlay} className="nav-link">play</button>
+        <nav className="fixed inset-x-0 top-0 z-50 flex items-start justify-between text-[15px] sm:text-[16px]">
+          <span className="bg-desk px-2 py-1 font-medium text-black">Stalk 10</span>
+          <span className="hidden gap-[3px] sm:flex">
+            <a href="#how" className="ts-tab">How it works</a>
+            <a href="#faq" className="ts-tab">FAQ</a>
+          </span>
+          <button type="button" onClick={() => window.dispatchEvent(new Event("stalk10:launch"))} className="ts-tab">Play now</button>
         </nav>
       )}
 
-      {/* ---------- Stage: hero → pill grows to full screen → list over the footage → pill shrinks back ---------- */}
-      <section ref={stage} className="relative" style={{ height: "calc(100svh + 260vh)" }}>
-        <div className="sticky top-0 h-[100svh] overflow-hidden">
-          {/* Left: the title + QR */}
-          <div ref={heroL} className="absolute inset-x-0 top-[13%] flex flex-col items-start px-5 sm:px-8 md:inset-x-auto md:left-0 md:top-0 md:h-full md:w-[38%] md:items-center md:justify-center md:px-6">
-            <h1 className="relative select-none font-extrabold leading-[0.86] tracking-[-0.06em]" aria-label="Stalk 10">
-              <span className="block text-[clamp(30px,4.2vw,64px)]">Psst,</span>
-              <span className="block whitespace-nowrap text-[clamp(64px,8.6vw,150px)]">Stalk 10</span>
-              <Scrawl text="psst!" className="left-[-4%] top-[-30%] text-[clamp(38px,5vw,84px)]" rotate={-12} delay={900} />
-              <Strike className="bottom-[-10%] left-[2%] h-[0.32em] w-[96%] text-[clamp(64px,8.6vw,150px)]" delay={1500} />
-            </h1>
-            <div className="mt-8 hidden lg:block">
-              <QR size={210} testId="qr" />
-            </div>
-          </div>
-
-          {/* Centre: the pill of footage */}
-          <div ref={pill} className="pill absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-black" style={{ width: 150, height: 250, borderRadius: 75 }}>
-            <video ref={video} className="h-full w-full object-cover" src={tall === null ? undefined : tall ? "/video/feed-portrait.mp4" : "/video/feed.mp4"} poster={tall === null ? undefined : tall ? "/video/feed-portrait-poster.jpg" : "/video/feed-poster.jpg"} autoPlay muted loop playsInline preload="auto" aria-hidden />
-            <div aria-hidden className="crt pointer-events-none absolute inset-0" />
-          </div>
-
-          {/* Right: eye doodle, blurb, Play */}
-          <div ref={heroR} className="absolute inset-x-0 bottom-[5%] flex flex-col items-center px-6 text-center md:inset-x-auto md:bottom-auto md:right-0 md:top-0 md:h-full md:w-[38%] md:justify-center md:px-10">
-            <Doodle name="eye" className="!relative hidden h-20 w-20 md:block" delay={600} />
-            <p className="mt-3 max-w-[330px] text-[16px] leading-[1.3] tracking-[-0.01em] sm:text-[18px]">
-              A memory game about made-up people. Look at a profile for <b className="font-bold">10 seconds</b>, then answer what you saw.
-              Three rounds, {TOTAL_QUESTIONS} questions, plenty of decoys.
+      {/* ---------- Hero: sky, news, headline, PLAY.app + QR ---------- */}
+      <section className="relative min-h-[100svh] overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-[46svh]"><Sky /></div>
+        <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-[1280px] flex-col items-center px-4 pb-8 pt-14 sm:px-8 lg:pt-16">
+          <Window title="Nov 2026 • Cipher Club News" className="w-full max-w-[360px]" body="bg-[#e8e8e8]">
+            <p className="flex items-start justify-between gap-4 px-2 py-1.5 font-plex text-[12px] leading-snug">
+              <span>Stalk 10 is live at the stall: 3 rounds, {TOTAL_QUESTIONS} questions.</span>
+              <a href="#how" className="shrink-0 underline underline-offset-2">Read rules</a>
             </p>
-            <div className="mt-6 flex flex-col items-center gap-2">
-              {playBtn(false, "play")}
-              <span className="hidden text-[13px] text-black/45 sm:block">or press Enter</span>
+          </Window>
+
+          <div className="relative mt-8 w-full max-w-[1180px] px-2 pb-6 pt-8 sm:mt-10 sm:px-10 lg:mt-[4.5vh]">
+            <Corner c="left-0 top-0 border-l border-t" /><Corner c="right-0 top-0 border-r border-t" />
+            <Corner c="bottom-0 left-0 border-b border-l" /><Corner c="bottom-0 right-0 border-b border-r" />
+            <p aria-hidden className="absolute -left-1 top-1/2 hidden origin-center -translate-x-1/2 -translate-y-1/2 -rotate-90 whitespace-nowrap font-plex text-[9px] tracking-wider text-black/40 lg:block">
+              bWlyYV9zbmFwcyBjYXQ9QmlzY3VpdCBjaXR5PVB1bmUgZHJpbms9aWNlZC1sYXR0ZSB0cmlwPUdvYQ
+            </p>
+            <p className="text-center text-[13px] font-medium sm:text-[14px]">
+              Introducing Stalk 10 <span className="hidden tracking-[0.2em] text-black/50 sm:inline">..................</span><span className="sm:hidden"> · </span> A memory game about strangers
+            </p>
+            <h1 className="mx-auto mt-4 max-w-[1100px] text-balance text-center text-[clamp(40px,6.4vw,104px)] font-medium leading-[0.92] tracking-[-0.045em]">
+              You Get 10 Seconds To Stalk A Stranger. Then We Quiz You.
+            </h1>
+
+            <div className="mt-8 grid items-center gap-6 lg:mt-[4.5vh] lg:grid-cols-[1fr_auto_1fr]">
+              <div className="hidden justify-self-end lg:block">
+                <Window title="Scan.app" body="bg-white">
+                  <div className="p-2"><QR size={176} testId="qr" /></div>
+                </Window>
+              </div>
+              <div className="justify-self-center"><PlayApp onPlay={onPlay} testId="play" big /></div>
+              <div className="flex flex-col items-center gap-3 lg:items-start lg:justify-self-start">
+                <a href="#how" className="ts-link text-[clamp(26px,2.6vw,40px)]">How It Works</a>
+                <a href="#faq" className="ts-link text-[clamp(26px,2.6vw,40px)]">Read The FAQ</a>
+                {best !== null && <p className="mt-1 font-plex text-[12px] text-black/60">Best on this device: <b className="text-black">{best}/{TOTAL_QUESTIONS}</b></p>}
+              </div>
             </div>
           </div>
-
-          <div ref={heroHint} aria-hidden className="absolute bottom-3 left-1/2 hidden -translate-x-1/2 items-center gap-1.5 text-[12px] text-black/40 md:flex">
-            <span className="inline-block h-[14px] w-[9px] rounded-full border border-current" /> scroll
-          </div>
-
-          {/* The hover list over the full-screen footage */}
-          <div ref={list} className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/80 via-black/50 to-transparent px-3 pb-6 pt-24 opacity-0 sm:px-4 sm:pb-8" style={{ pointerEvents: "none" }}>
-            <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-neon sm:text-[15px]">What you&apos;ll have to remember</p>
-            <ul onMouseLeave={() => setHovering(false)}>
-              {FACTS.map((f, i) => (
-                <li key={f.text} className="relative w-fit">
-                  <button
-                    type="button"
-                    onMouseEnter={() => { setHovering(true); setActive(i); }}
-                    onFocus={() => setActive(i)}
-                    onClick={() => setActive(i)}
-                    className={`fact block text-left text-[clamp(34px,6.2vw,100px)] font-extrabold leading-[0.9] tracking-[-0.055em] transition-colors duration-200 ${i === active ? "text-white" : "text-white/35"}`}
-                  >
-                    {f.text}
-                  </button>
-                  {i === active && (
-                    <>
-                      <Scrawl key={`s${i}`} text={f.scrawl} className="left-[30%] top-[-18%] text-[clamp(30px,4.6vw,76px)]" rotate={-9} />
-                      <span key={`t${i}`} className="tag absolute -right-3 top-1/2 translate-x-full -translate-y-1/2 whitespace-nowrap bg-white px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-black">
-                        seen at 0:{String(Math.round(f.t)).padStart(2, "0")}
-                      </span>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
       </section>
 
-      {/* ---------- Statement with marker redactions ---------- */}
-      <section id="how" className="relative px-5 pb-[16vh] pt-[16vh] sm:px-8">
-        <p className="mb-8 text-center text-[13px] font-bold uppercase tracking-[0.14em] text-neon-deep sm:text-[14px]">The catch</p>
-        <div ref={statement} className="mx-auto max-w-[920px] text-balance text-center text-[clamp(30px,4.1vw,60px)] font-extrabold leading-[1.1] tracking-[-0.05em]">
-          {STATEMENT.split(/(\[[^\]]+\])/).map((part, i, all) => {
-            const m = part.match(/^\[(.+)\]$/);
-            // Punctuation right after a redacted word stays on its line ("Pune," never wraps as "Pune / ,").
-            if (!m) return <span key={i}>{all[i - 1]?.startsWith("[") ? part.replace(/^[.,?!]+/, "") : part}</span>;
-            const tail = all[i + 1]?.match(/^[.,?!]+/)?.[0] ?? "";
-            return (
-              <span key={i} className="whitespace-nowrap">
-                <span data-redact className="redact relative inline-block">
-                  <span aria-hidden className="mark" />
-                  <span className="relative">{m[1]}</span>
-                  <span aria-hidden className="blot" />
-                </span>
-                {tail}
-              </span>
-            );
-          })}
-        </div>
-        <div className="relative mx-auto mt-6 flex max-w-[920px] justify-end pr-[6%]">
-          <span className="relative h-[60px] w-[200px]"><Scrawl text="easy, right?" on={statIn} className="right-0 top-2 text-[clamp(22px,2.4vw,34px)]" rotate={-6} /></span>
-        </div>
-
-        <ol className="mx-auto mt-[10vh] grid max-w-[1100px] gap-8 border-t border-black/15 pt-8 sm:grid-cols-3 sm:gap-6">
-          {[
-            ["01", "Look", "A made-up profile shows for ten seconds. Scroll as fast as you like."],
-            ["02", "Answer", "Five questions about it, seven seconds each. Three rounds, Easy to Hard."],
-            ["03", "Don't get fooled", "Decoys (her friend's dog, not her cat) and look-alikes (Biscotti vs Biscuit)."],
-          ].map(([n, h, t]) => (
-            <li key={n} className="text-left">
-              <span className="text-[13px] font-bold tabular-nums text-black/40">{n}</span>
-              <h3 className="mt-2 text-[clamp(26px,2.6vw,36px)] font-extrabold leading-none tracking-[-0.045em]">{h}</h3>
-              <p className="mt-3 max-w-[300px] text-[16px] leading-[1.35] text-black/70">{t}</p>
-            </li>
-          ))}
-        </ol>
-        <p className="mx-auto mt-10 max-w-[1100px] text-[13px] text-black/45">Everyone in this game is fictional.</p>
-      </section>
-
-      {/* ---------- Footer: black pill opens into the Play section ---------- */}
-      <footer ref={foot} className="foot relative overflow-hidden bg-black px-5 pb-8 pt-44 text-white sm:px-8 sm:pt-28">
-        <Doodle name="glass" on={footIn} className="left-[4%] top-[3%] h-20 w-20 sm:top-[10%] sm:h-36 sm:w-36" />
-        <Doodle name="cat" on={footIn} delay={150} className="right-[6%] top-[3%] h-20 w-20 sm:top-[8%] sm:h-32 sm:w-32" />
-        <Doodle name="phone" on={footIn} delay={300} className="bottom-[22%] left-[7%] hidden h-32 w-32 md:block" />
-        <Doodle name="at" on={footIn} delay={450} className="bottom-[30%] right-[9%] hidden h-24 w-24 md:block" />
-        <Doodle name="smile" on={footIn} delay={600} className="left-[30%] top-[6%] hidden h-16 w-16 lg:block" />
-        <Doodle name="q" on={footIn} delay={750} className="right-[30%] top-[14%] hidden h-16 w-16 lg:block" />
-        <Doodle name="heart" on={footIn} delay={900} className="bottom-[12%] left-[30%] hidden h-14 w-14 lg:block" />
-        <Doodle name="star" on={footIn} delay={1050} className="bottom-[14%] right-[28%] hidden h-14 w-14 lg:block" />
-
-        <div className="relative z-10 mx-auto flex max-w-[1100px] flex-col items-center text-center">
-          <h2 className="relative text-[clamp(52px,8.4vw,140px)] font-extrabold leading-[0.88] tracking-[-0.06em]">
-            Ready to<br />stalk?
-            <Scrawl text="now!" on={footIn} className="right-[-14%] top-[-16%] text-[0.36em]" rotate={-10} delay={300} />
+      {/* ---------- STALK.OS desktop: how a round works ---------- */}
+      <section id="how" className="relative overflow-hidden bg-desk px-3 py-16 sm:px-8 sm:py-24">
+        <Halftone />
+        <div className="relative mx-auto max-w-[1180px]">
+          <h2 className="max-w-[900px] text-[clamp(36px,5vw,80px)] font-medium leading-[0.95] tracking-[-0.045em]">
+            Look. Remember. Don&apos;t Get Fooled.
           </h2>
-          <div className="mt-12 flex flex-col items-center gap-3">
-            {playBtn(true)}
-            <span className="hidden text-[14px] text-white/50 sm:block">or press Enter</span>
+          <p className="mt-4 max-w-[520px] font-plex text-[13px] leading-relaxed sm:text-[14px]">
+            Each round a made-up profile shows for ten seconds. Then {QUESTIONS_PER_ROUND} questions, seven seconds each. Three rounds, Easy to Hard.
+          </p>
+
+          <div className="ts-desk relative mt-10 border border-black lg:h-[640px]">
+            <span className="absolute left-0 top-0 z-10 bg-black px-1.5 py-0.5 font-pixel text-[13px] text-white">STALK.OS</span>
+            <div className="flex flex-col gap-5 p-4 pt-10 lg:block lg:p-0">
+              <Window drag title="Clock Tool 1.1" className="lg:absolute lg:right-6 lg:top-6 lg:w-[230px]" body="bg-white">
+                <p className="px-2 py-1.5 font-plex text-[12px]"><Clock /></p>
+              </Window>
+
+              <Window drag title="Profile.app" className="lg:absolute lg:left-[6%] lg:top-[70px] lg:w-[330px]">
+                <div className="p-3">
+                  <div className="flex items-center gap-3">
+                    <img src="/pfp/p-cat.webp" alt="" className="h-12 w-12 border border-black object-cover grayscale contrast-150" />
+                    <div className="leading-tight">
+                      <p className="font-semibold">Mira Joshi</p>
+                      <p className="font-plex text-[12px] text-black/55">@mira_snaps · step 1</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-[15px] leading-snug">Cat mum to <mark className="ts-mark">Biscuit</mark> 🐈 Photographer in <mark className="ts-mark">Pune</mark>. Coffee first.</p>
+                  <p className="mt-2 border-t border-dashed border-black/30 pt-2 text-[14px]">Third <mark className="ts-mark">iced latte</mark> today. Send help.</p>
+                  <p className="mt-2 border-t border-dashed border-black/30 pt-2 text-[14px]">Babysitting Arjun&apos;s dog Cookie this weekend.</p>
+                </div>
+              </Window>
+
+              <Window drag title="Timer 1.1" className="lg:absolute lg:left-[33%] lg:top-[30px] lg:w-[200px]" body="bg-[#e8e8e8]">
+                <div className="px-3 py-2">
+                  <p className="ts-count font-pixel text-[64px] leading-none" role="img" aria-label="10 second look" />
+                  <div className="mt-2 h-3 border border-black bg-white"><span className="ts-drain block h-full bg-black" /></div>
+                  <p className="mt-1.5 font-plex text-[11px]">seconds to look · step 1</p>
+                </div>
+              </Window>
+
+              <Window drag title="Quiz.exe" className="lg:absolute lg:left-[40%] lg:top-[190px] lg:w-[380px]">
+                <div className="p-3">
+                  <p className="font-plex text-[11px] text-black/55">Q1 of 5 · 7 sec · step 2</p>
+                  <p className="mt-1 text-[19px] font-medium leading-tight tracking-[-0.02em]">What is Mira&apos;s cat called?</p>
+                  <ul className="mt-3 grid grid-cols-2 gap-2 font-pixel text-[17px]">
+                    {[["Cookie", "decoy"], ["Biscuit", "right"], ["Biscotti", "look-alike"], ["Mochi", ""]].map(([o, k], i) => (
+                      <li key={o} className={`flex items-center justify-between border border-black px-2 py-1.5 ${k === "right" ? "bg-black text-white" : "bg-white"}`}>
+                        <span>{i + 1}. {o}</span>{k && k !== "right" && <span className="font-plex text-[10px] opacity-60">{k}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Window>
+
+              <Window drag title="Decoy.alert" className="lg:absolute lg:left-[16%] lg:top-[400px] lg:w-[300px]" body="bg-white">
+                <div className="flex gap-3 p-3">
+                  <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center border-2 border-black font-pixel text-[22px]">!</span>
+                  <div>
+                    <p className="font-semibold">Decoy!</p>
+                    <p className="text-[14px] leading-snug">Cookie is Arjun&apos;s dog. Mira&apos;s cat is Biscuit.</p>
+                    <span className="mt-2 inline-block border-2 border-black px-4 py-0.5 font-pixel text-[14px]">OK</span>
+                  </div>
+                </div>
+              </Window>
+
+              <Window drag title="Rounds.db" className="lg:absolute lg:bottom-[34px] lg:right-[5%] lg:w-[430px]">
+                <table className="w-full font-plex text-[12px]">
+                  <thead><tr className="bg-[#e8e8e8] text-left">
+                    <th className="px-2 py-1 font-medium">Round</th><th className="px-2 py-1 font-medium">Look</th><th className="px-2 py-1 font-medium">Qs</th><th className="px-2 py-1 font-medium">Watch for</th>
+                  </tr></thead>
+                  <tbody>
+                    {ROWS.map(({ d, rule }) => (
+                      <tr key={d} className="border-t border-black/20">
+                        <td className="px-2 py-1.5"><span className="bg-black px-1 text-white">{rule.label}</span></td>
+                        <td className="px-2 py-1.5">10s</td><td className="px-2 py-1.5">{QUESTIONS_PER_ROUND}</td>
+                        <td className="px-2 py-1.5">{rule.blurb}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Window>
+
+              <Window drag title="Glider 1.1" className="hidden lg:absolute lg:bottom-[34px] lg:left-6 lg:block">
+                <Glider />
+              </Window>
+            </div>
           </div>
-          <div className="mt-16 hidden md:block"><QR size={240} dark /></div>
-          {best !== null && (
-            <p className="mt-10 text-[15px] text-white/70">Best on this device: <b className="text-neon">{best}/{TOTAL_QUESTIONS}</b></p>
-          )}
+          <p className="mt-4 font-plex text-[11px] text-black/70">Tip: drag the windows around.</p>
         </div>
-        <div className="relative z-10 mt-20 flex flex-col items-center justify-between gap-2 text-[12px] text-white/45 sm:flex-row">
-          <span>A Cipher club stall game</span>
+      </section>
+
+      {/* ---------- FAQ (dark) ---------- */}
+      <section id="faq" className="bg-[#141414] px-4 py-20 text-white sm:px-8 sm:py-28">
+        <div className="mx-auto max-w-[900px]">
+          <h2 className="text-center text-[clamp(32px,4vw,56px)] font-medium tracking-[-0.04em]">We Answer The Obvious</h2>
+          <div className="mt-10 border-t border-white/20">
+            {FAQ.map(([q, a]) => (
+              <details key={q} className="ts-faq group border-b border-white/20">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-plex text-[13px] sm:text-[14px]">
+                  {q}<span aria-hidden className="grid h-5 w-5 shrink-0 place-items-center border border-white/50 text-[12px] group-open:rotate-45">+</span>
+                </summary>
+                <p className="pb-5 pr-10 text-[16px] leading-relaxed text-white/75">{a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- Footer: wireframe cube + wordmark ---------- */}
+      <footer className="relative overflow-hidden bg-[#141414] px-4 pb-6 text-white sm:px-8">
+        <div className="relative mx-auto grid h-[min(70vh,560px)] max-w-[1180px] place-items-center">
+          <Cube className="absolute inset-0 h-full w-full" />
+          <div className="relative flex flex-col items-center gap-6">
+            <p className="flex items-center gap-3 text-[clamp(48px,7vw,104px)] font-medium tracking-[-0.05em]">
+              <svg aria-hidden viewBox="0 0 48 48" className="h-[0.8em] w-[0.8em]" fill="none" stroke="currentColor" strokeWidth="3"><path d="M3 24C10 12 38 12 45 24C38 36 10 36 3 24Z" /><circle cx="24" cy="24" r="7" fill="#3CCF7A" /><circle cx="24" cy="24" r="3" fill="#141414" stroke="none" /></svg>Stalk 10
+            </p>
+            <button type="button" onClick={() => window.dispatchEvent(new Event("stalk10:launch"))} className="ts-link text-[clamp(22px,2.2vw,32px)] text-white">Play now →</button>
+          </div>
+        </div>
+        <div className="mx-auto flex max-w-[1180px] flex-col gap-2 border-t border-white/15 pt-4 font-plex text-[11px] text-white/50 sm:flex-row sm:justify-between">
+          <span>Stalk 10 © 2026 · a Cipher club stall game</span>
           <span>Everyone in this game is fictional</span>
         </div>
       </footer>
