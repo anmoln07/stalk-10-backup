@@ -162,6 +162,10 @@ button:focus-visible{outline-color:#fff}
    Landing v4 (backup repo): after typesafe.ai — 1-bit OS windows, green / black / white / grey
    ===================================================================== */
 .ts{color-scheme:light}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.lenis.lenis-stopped{overflow:hidden}
 .os-win{position:relative;border:1.5px solid #000;background:#fff;box-shadow:3px 3px 0 #000;color:#141414}
 .os-title{display:flex;align-items:center;height:20px;padding:0 6px;background:#000;color:#fff;user-select:none;touch-action:none}
 .os-title-text{font-family:var(--font-pixel),monospace;font-size:13px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

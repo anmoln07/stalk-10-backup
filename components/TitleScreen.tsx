@@ -11,6 +11,7 @@ import { profiles } from "@/content/profiles";
 import Window from "./os/Window";
 import HoldPlay from "./os/HoldPlay";
 import BigEye from "./os/BigEye";
+import SmoothScroll from "./os/SmoothScroll";
 import { Clock, Cube, Glider, Halftone, Sky } from "./os/Art";
 
 /**
@@ -45,6 +46,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
 
   return (
     <main className="ts relative bg-white font-inter text-[#141414] selection:bg-desk selection:text-black" data-testid="title-screen">
+      <SmoothScroll />
       {/* ---------- Nav ---------- */}
       {!params.kiosk && (
         <nav className="fixed inset-x-0 top-0 z-50 flex items-start justify-between text-[15px] sm:text-[16px]">
