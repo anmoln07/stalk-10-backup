@@ -12,6 +12,7 @@ import Window from "./os/Window";
 import HoldPlay from "./os/HoldPlay";
 import BigEye from "./os/BigEye";
 import SmoothScroll from "./os/SmoothScroll";
+import Logo from "./os/Logo";
 import { Clock, Cube, Glider, Halftone, Sky } from "./os/Art";
 
 /**
@@ -50,7 +51,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
       {/* ---------- Nav ---------- */}
       {!params.kiosk && (
         <nav className="fixed inset-x-0 top-0 z-50 flex items-start justify-between text-[15px] sm:text-[16px]">
-          <span className="bg-desk px-2 py-1 font-medium text-black">Stalk 10</span>
+          <a href="#" aria-label="Stalk 10, back to top" className="border-b-[1.5px] border-r-[1.5px] border-black bg-white px-2.5 py-1.5 shadow-[3px_3px_0_#000]"><Logo /></a>
           <span className="hidden gap-[3px] sm:flex">
             <a href="#how" className="ts-tab">How it works</a>
             <a href="#faq" className="ts-tab">FAQ</a>
@@ -217,9 +218,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
         <div className="relative mx-auto grid h-[min(70vh,560px)] max-w-[1180px] place-items-center">
           <Cube className="absolute inset-0 h-full w-full" />
           <div className="relative flex flex-col items-center gap-6">
-            <p className="flex items-center gap-3 text-[clamp(48px,7vw,104px)] font-medium tracking-[-0.05em]">
-              <svg aria-hidden viewBox="0 0 48 48" className="h-[0.8em] w-[0.8em]" fill="none" stroke="currentColor" strokeWidth="3"><path d="M3 24C10 12 38 12 45 24C38 36 10 36 3 24Z" /><circle cx="24" cy="24" r="7" fill="#3CCF7A" /><circle cx="24" cy="24" r="3" fill="#141414" stroke="none" /></svg>Stalk 10
-            </p>
+            <p className="text-white" aria-label="Stalk 10"><Logo size="lg" dark /></p>
             <button type="button" onClick={() => window.dispatchEvent(new Event("stalk10:launch"))} className="ts-link text-[clamp(22px,2.2vw,32px)] text-white">Play now →</button>
           </div>
         </div>

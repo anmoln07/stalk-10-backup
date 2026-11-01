@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BAYER } from "./eye";
+import { useVisible } from "./visible";
 
 /**
  * HOLD TO STALK: the Play button (after evilbuttons.com's Hold + Dither buttons).
@@ -24,6 +25,7 @@ export default function HoldPlay({ onPlay, testId }: { onPlay: () => void; testI
   const [burst, setBurst] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [load, setLoad] = useState(-1);
   const still = useRef(false);
+  const vis = useVisible(btn);
 
   const emit = (v: number) => window.dispatchEvent(new CustomEvent("stalk10:charge", { detail: v }));
 
@@ -41,9 +43,10 @@ export default function HoldPlay({ onPlay, testId }: { onPlay: () => void; testI
     still.current = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const c = cv.current, g = c?.getContext("2d");
     if (!c || !g) return;
-    let raf = 0, last = performance.now();
+    let raf = 0, last = performance.now(), shown = -1;
     const frame = (now: number) => {
       const dt = now - last; last = now;
+      if (!vis.current && !holding.current && !auto.current) { raf = requestAnimationFrame(frame); return; }
       const w = Math.ceil(c.clientWidth / CELL), h = Math.ceil(c.clientHeight / CELL);
       if (!w || !h) { raf = requestAnimationFrame(frame); return; }
       if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
@@ -52,8 +55,7 @@ export default function HoldPlay({ onPlay, testId }: { onPlay: () => void; testI
       if (holding.current || auto.current) prog.current = Math.min(1, prog.current + (dt / HOLD_MS) * speed);
       else prog.current = Math.max(0, prog.current - dt / 260);
       const pr = prog.current;
-      setP(pr);
-      emit(pr);
+      if (pr !== shown) { shown = pr; setP(pr); emit(pr); }
       if (pr >= 1 && (holding.current || auto.current)) { holding.current = false; auto.current = false; finish(); }
       // draw: green dither where the wave is "on", only inside the filled part (+ a breathing peek at idle)
       const img = g.createImageData(w, h);
@@ -74,7 +76,7 @@ export default function HoldPlay({ onPlay, testId }: { onPlay: () => void; testI
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [finish]);
+  }, [finish, vis]);
 
   const down = (e: React.PointerEvent) => {
     if (state === "done") return;

@@ -6,6 +6,7 @@ import { RULES, QUESTIONS_PER_ROUND } from "@/content/rules";
 import type { Difficulty, FactKind } from "@/content/types";
 import { recordScore, nextLessonIndex } from "@/lib/storage";
 import { useIdle, useKeys } from "@/lib/hooks";
+import Logo from "./os/Logo";
 
 const IDLE_MS = 30_000;
 
@@ -74,7 +75,7 @@ export default function Results({
     <main className="os-screen relative min-h-[100dvh] overflow-x-clip px-4 pb-10 pt-16 font-inter sm:px-8 sm:pt-20" data-testid="results" data-score={score}>
       {!kiosk && (
         <nav className="fixed inset-x-0 top-0 z-50 flex items-start justify-between text-[15px] sm:text-[16px]">
-          <button type="button" onClick={onTitle} className="bg-desk px-2 py-1 font-medium text-black">Stalk 10</button>
+          <button type="button" onClick={onTitle} aria-label="Stalk 10, back to title" className="border-b-[1.5px] border-r-[1.5px] border-black bg-white px-2.5 py-1.5 shadow-[3px_3px_0_#000]"><Logo /></button>
           <span className="bg-white px-2 py-1 font-medium">Best <b data-testid="best">{best ?? score}/{total}</b></span>
         </nav>
       )}

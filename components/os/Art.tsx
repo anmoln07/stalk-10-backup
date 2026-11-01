@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useVisible } from "./visible";
 
 const still = () => typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -37,9 +38,9 @@ export function Sky({ className = "" }: { className?: string }) {
         img.data[i] = r; img.data[i + 1] = gg; img.data[i + 2] = b; img.data[i + 3] = 255;
       }
       g.putImageData(img, 0, 0);
-      if (!still()) raf = requestAnimationFrame(draw);
     };
-    raf = requestAnimationFrame(draw);
+    // Drawn once: a moving blurred canvas repaints the whole hero every frame and makes scrolling stutter.
+    raf = requestAnimationFrame(() => draw(4000));
     return () => cancelAnimationFrame(raf);
   }, []);
   return <canvas ref={cv} aria-hidden className={`pointer-events-none block h-full w-full blur-[18px] ${className}`} />;
@@ -114,6 +115,7 @@ export function Clock() {
 /** Dashed wireframe cube slowly turning (footer). */
 export function Cube({ className = "" }: { className?: string }) {
   const cv = useRef<HTMLCanvasElement>(null);
+  const vis = useVisible(cv);
   useEffect(() => {
     const c = cv.current, g = c?.getContext("2d");
     if (!c || !g) return;
@@ -122,6 +124,7 @@ export function Cube({ className = "" }: { className?: string }) {
     const E: [number, number][] = [];
     V.forEach((a, i) => V.forEach((b, j) => { if (j > i && a.filter((v, k) => v !== b[k]).length === 1) E.push([i, j]); }));
     const frame = (t: number) => {
+      if (!vis.current) { raf = requestAnimationFrame(frame); return; }
       const w = c.clientWidth, h = c.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
       if (c.width !== w * dpr) { c.width = w * dpr; c.height = h * dpr; }
       g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
@@ -138,6 +141,6 @@ export function Cube({ className = "" }: { className?: string }) {
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [vis]);
   return <canvas ref={cv} aria-hidden className={`pointer-events-none ${className}`} />;
 }
