@@ -253,7 +253,7 @@ async function testViewport(browser, vp) {
   await page.screenshot({ path: path.join(DOCS, `title-${vp.name}.png`) });
 
   // ---- full-length game with screenshots ----
-  await page.locator('button[data-testid="play"]').click();
+  await page.keyboard.press('Enter'); // Play is press-and-hold; Enter starts it
   const seq = { easy: [], medium: [], hard: [] };
   const push = (ids) => Object.entries(ids).forEach(([d, id]) => seq[d].push(id));
   const t0 = Date.now();

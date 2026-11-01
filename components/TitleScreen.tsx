@@ -9,7 +9,8 @@ import { TOTAL_QUESTIONS, QUESTIONS_PER_ROUND, RULES } from "@/content/rules";
 import { ranks } from "@/content/ranks";
 import { profiles } from "@/content/profiles";
 import Window from "./os/Window";
-import PlayApp from "./os/PlayApp";
+import HoldPlay from "./os/HoldPlay";
+import BigEye from "./os/BigEye";
 import { Clock, Cube, Glider, Halftone, Sky } from "./os/Art";
 
 /**
@@ -58,7 +59,10 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
 
       {/* ---------- Hero: sky, news, headline, PLAY.app + QR ---------- */}
       <section className="relative min-h-[100svh] overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-[46svh]"><Sky /></div>
+        <div className="absolute inset-x-0 top-0 h-[40svh] opacity-70"><Sky /></div>
+        <div className="pointer-events-none absolute inset-x-0 top-[16svh] flex justify-center lg:top-[12svh]">
+          <BigEye className="w-[150vw] max-w-none sm:w-[110vw] lg:w-[92vw] lg:max-w-[1400px]" />
+        </div>
         <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-[1280px] flex-col items-center px-4 pb-8 pt-14 sm:px-8 lg:pt-12">
           <Window title="Nov 2026 • Cipher Club News" className="w-full max-w-[360px]" body="bg-[#e8e8e8]">
             <p className="flex items-start justify-between gap-4 px-2 py-1.5 font-plex text-[12px] leading-snug">
@@ -86,7 +90,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
                   <div className="p-2"><QR size={170} testId="qr" /></div>
                 </Window>
               </div>
-              <div className="justify-self-center"><PlayApp onPlay={onPlay} testId="play" big /></div>
+              <div className="justify-self-center"><HoldPlay onPlay={onPlay} testId="play" /></div>
               <div className="flex flex-col items-center gap-3 lg:items-start lg:justify-self-start">
                 <a href="#how" className="ts-link text-[clamp(26px,2.6vw,40px)]">How It Works</a>
                 <a href="#faq" className="ts-link text-[clamp(26px,2.6vw,40px)]">Read The FAQ</a>
