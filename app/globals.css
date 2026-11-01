@@ -152,3 +152,8 @@ button:focus-visible{outline-color:#fff}
 @keyframes thump{0%{transform:scale(2.2) rotate(-14deg);opacity:0}60%{transform:scale(.94) rotate(-9deg);opacity:1}100%{transform:scale(1) rotate(-9deg);opacity:1}}
 .stamp-in{animation:thump .45s cubic-bezier(.2,.9,.3,1.3) .5s both}
 @media (prefers-reduced-motion:reduce){.stamp-in{animation:none}}
+
+/* Chibi Dot: sprout wiggle */
+@keyframes dotsprout{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(10deg)}}
+.dot-sprout{animation:dotsprout 1.8s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.dot-sprout{animation:none}}
