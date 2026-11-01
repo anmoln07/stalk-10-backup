@@ -38,6 +38,14 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
   const [hovering, setHovering] = useState(false);
   const [footIn, setFootIn] = useState(false);
   const [statIn, setStatIn] = useState(false);
+  // Phones (portrait screens) get a portrait cut of the footage so it fills the pill and full screen without cropping.
+  const [tall, setTall] = useState<boolean | null>(null);
+  useEffect(() => {
+    const check = () => setTall(window.innerHeight > window.innerWidth);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
   const stage = useRef<HTMLElement>(null);
   const pill = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
@@ -197,7 +205,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
 
           {/* Centre: the pill of footage */}
           <div ref={pill} className="pill absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-black" style={{ width: 150, height: 250, borderRadius: 75 }}>
-            <video ref={video} className="h-full w-full object-cover" src="/video/feed.mp4" poster="/video/feed-poster.jpg" autoPlay muted loop playsInline preload="auto" aria-hidden />
+            <video ref={video} className="h-full w-full object-cover" src={tall === null ? undefined : tall ? "/video/feed-portrait.mp4" : "/video/feed.mp4"} poster={tall === null ? undefined : tall ? "/video/feed-portrait-poster.jpg" : "/video/feed-poster.jpg"} autoPlay muted loop playsInline preload="auto" aria-hidden />
             <div aria-hidden className="crt pointer-events-none absolute inset-0" />
           </div>
 
