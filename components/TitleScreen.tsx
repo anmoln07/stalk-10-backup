@@ -8,8 +8,6 @@ import type { GameParams } from "@/lib/params";
 import { TOTAL_QUESTIONS } from "@/content/rules";
 import Scrawl, { Loop, Strike } from "./land/Scrawl";
 import Doodle from "./land/Doodles";
-import StickerTrail from "./land/StickerTrail";
-import Loader from "./land/Loader";
 
 /**
  * Landing page, after artemartemartem.com: white page, heavy black type, neon-green marker scrawls,
@@ -80,7 +78,6 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
         p.style.width = `${pw + (vw - pw) * e}px`;
         p.style.height = `${ph + (vh - ph) * e}px`;
         p.style.borderRadius = `${(pw / 2) * (1 - e)}px`;
-        document.documentElement.dataset.trail = g > 0.08 ? "off" : "on";
         const fade = 1 - clamp(g * 1.8);
         const push = ease(g);
         if (heroL.current) { heroL.current.style.opacity = `${fade}`; heroL.current.style.transform = `translateX(${-push * 12}vw)`; }
@@ -173,8 +170,6 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
 
   return (
     <main className="land relative bg-white font-sans text-black selection:bg-neon selection:text-black" data-testid="title-screen">
-      <Loader skip={params.kiosk} />
-      <StickerTrail />
 
       {!params.kiosk && (
         <nav className="fixed inset-x-0 top-0 z-50 flex items-start justify-between px-3 pt-2 text-[17px] font-semibold tracking-[-0.03em] text-white mix-blend-difference sm:px-4 sm:text-[22px]">
@@ -321,7 +316,6 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
         </div>
         <div className="relative z-10 mt-20 flex flex-col items-center justify-between gap-2 text-[12px] text-white/45 sm:flex-row">
           <span>A Cipher club stall game</span>
-          <span>Illustrations: <a className="underline underline-offset-2 hover:text-white" href="https://kitbitz.art/" target="_blank" rel="noreferrer">Kitbitz</a> (CC0)</span>
           <span>Everyone in this game is fictional</span>
         </div>
       </footer>

@@ -207,15 +207,6 @@ button:focus-visible{outline-color:#fff}
   clip-path:inset(0 0 0 calc(var(--r,0) * 101%));box-shadow:.12em .04em 0 -.02em #0b0b0b,-.1em -.03em 0 -.03em #0b0b0b}
 /* Footer */
 .foot{clip-path:inset(8% 40% 70% 40% round 160px);will-change:clip-path}
-/* Sticker trail + loader */
-.trail{transition:opacity .25s}
-[data-trail=off] .trail{opacity:0}
-.sticker{position:absolute;transform:translate(-50%,-50%) rotate(var(--r)) scale(0);animation:stk 1.5s cubic-bezier(.2,.9,.3,1.2) forwards;user-select:none}
-@keyframes stk{0%{transform:translate(-50%,-50%) rotate(var(--r)) scale(0)}14%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1)}
-  75%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1)}100%{transform:translate(-50%,-50%) rotate(var(--r)) scale(0)}}
-.loader-sticker{transform:translate(-50%,-50%) rotate(var(--r));animation:pop-in .3s var(--spring) both}
-.loader{transition:transform .6s cubic-bezier(.7,0,.2,1)}
-.loader-out{transform:translateY(-100%)}
 @media (prefers-reduced-motion:reduce){
   .scrawl.on{animation:none;clip-path:none}
   .strike path,.doodle path,.loop path{stroke-dashoffset:0;opacity:1;animation:none!important}
