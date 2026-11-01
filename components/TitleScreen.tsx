@@ -59,7 +59,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
       {/* ---------- Hero: sky, news, headline, PLAY.app + QR ---------- */}
       <section className="relative min-h-[100svh] overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-[46svh]"><Sky /></div>
-        <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-[1280px] flex-col items-center px-4 pb-8 pt-14 sm:px-8 lg:pt-16">
+        <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-[1280px] flex-col items-center px-4 pb-8 pt-14 sm:px-8 lg:pt-12">
           <Window title="Nov 2026 • Cipher Club News" className="w-full max-w-[360px]" body="bg-[#e8e8e8]">
             <p className="flex items-start justify-between gap-4 px-2 py-1.5 font-plex text-[12px] leading-snug">
               <span>Stalk 10 is live at the stall: 3 rounds, {TOTAL_QUESTIONS} questions.</span>
@@ -67,7 +67,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
             </p>
           </Window>
 
-          <div className="relative mt-8 w-full max-w-[1180px] px-2 pb-6 pt-8 sm:mt-10 sm:px-10 lg:mt-[4.5vh]">
+          <div className="relative mt-8 w-full max-w-[1180px] px-2 pb-6 pt-8 sm:mt-10 sm:px-10 lg:mt-[3vh] lg:pt-6">
             <Corner c="left-0 top-0 border-l border-t" /><Corner c="right-0 top-0 border-r border-t" />
             <Corner c="bottom-0 left-0 border-b border-l" /><Corner c="bottom-0 right-0 border-b border-r" />
             <p aria-hidden className="absolute -left-1 top-1/2 hidden origin-center -translate-x-1/2 -translate-y-1/2 -rotate-90 whitespace-nowrap font-plex text-[9px] tracking-wider text-black/40 lg:block">
@@ -76,14 +76,14 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
             <p className="text-center text-[13px] font-medium sm:text-[14px]">
               Introducing Stalk 10 <span className="hidden tracking-[0.2em] text-black/50 sm:inline">..................</span><span className="sm:hidden"> · </span> A memory game about strangers
             </p>
-            <h1 className="mx-auto mt-4 max-w-[1100px] text-balance text-center text-[clamp(40px,6.4vw,104px)] font-medium leading-[0.92] tracking-[-0.045em]">
+            <h1 className="mx-auto mt-4 max-w-[1100px] text-balance text-center text-[clamp(40px,min(6vw,10.5vh),100px)] font-medium leading-[0.92] tracking-[-0.045em]">
               You Get 10 Seconds To Stalk A Stranger. Then We Quiz You.
             </h1>
 
-            <div className="mt-8 grid items-center gap-6 lg:mt-[4.5vh] lg:grid-cols-[1fr_auto_1fr]">
+            <div className="mt-8 grid items-center gap-6 lg:mt-[3vh] lg:grid-cols-[1fr_auto_1fr]">
               <div className="hidden justify-self-end lg:block">
                 <Window title="Scan.app" body="bg-white">
-                  <div className="p-2"><QR size={176} testId="qr" /></div>
+                  <div className="p-2"><QR size={170} testId="qr" /></div>
                 </Window>
               </div>
               <div className="justify-self-center"><PlayApp onPlay={onPlay} testId="play" big /></div>

@@ -8,7 +8,7 @@ import Window from "./Window";
  * Pressing it plays the classic Mac zoom-rectangles from the button to the full screen, a pixel loading bar fills,
  * then the game starts. Reduced motion: still eye, no zoom, starts straight away.
  */
-const W = 84, H = 44; // eye canvas in "pixels" (scaled up with image-rendering: pixelated)
+const W = 96, H = 38; // eye canvas in "pixels" (scaled up with image-rendering: pixelated)
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16);
 
 export default function PlayApp({ onPlay, testId, big = false }: { onPlay: () => void; testId?: string; big?: boolean }) {
@@ -57,7 +57,7 @@ export default function PlayApp({ onPlay, testId, big = false }: { onPlay: () =>
         let v = 1; // 1 = white, 0 = black
         let green = false;
         if (lens < 1) {
-          v = 0.92 - 0.5 * Math.max(0, lens - 0.45); // sclera, shaded at the edges
+          v = 1.02 - 0.7 * Math.max(0, lens - 0.62); // sclera: clean white, a little shading at the rim
           const rx = x - ix, ry = (y - iy) * 1.05, r = Math.hypot(rx, ry);
           if (r < ir) {
             const ang = Math.atan2(ry, rx);
@@ -69,7 +69,7 @@ export default function PlayApp({ onPlay, testId, big = false }: { onPlay: () =>
         }
         if (edge && lens > 0.7) v = 0;
         const t = BAYER[((y + (boil | 0)) & 3) * 4 + ((x + ((boil * 3) | 0)) & 3)] + (boil ? (Math.random() - 0.5) * 0.25 : 0);
-        const on = v < t; // black ink
+        const on = v < 1 && v < t; // black ink (pure white stays white, even while boiling)
         const i = (y * W + x) * 4;
         if (on) { d[i] = green ? 31 : 10; d[i + 1] = green ? 143 : 10; d[i + 2] = green ? 78 : 10; }
         else { d[i] = green ? 60 : 255; d[i + 1] = green ? 207 : 255; d[i + 2] = green ? 122 : 255; }
@@ -110,26 +110,37 @@ export default function PlayApp({ onPlay, testId, big = false }: { onPlay: () =>
 
   return (
     <>
-      <Window title="PLAY.app" className={`play-app max-w-[calc(100vw-48px)] ${big ? "w-[340px]" : "w-[280px]"}`}>
-        <button
-          ref={btn}
-          type="button"
-          onClick={go}
-          onPointerEnter={() => (hover.current = true)}
-          onPointerLeave={() => (hover.current = false)}
-          onFocus={() => (hover.current = true)}
-          onBlur={() => (hover.current = false)}
-          data-testid={testId}
-          aria-label="Play Stalk 10"
-          className="play-hit group block w-full outline-none"
-        >
-          <canvas ref={cv} aria-hidden className="block w-full [image-rendering:pixelated]" style={{ aspectRatio: `${W} / ${H}` }} />
-          <span className="play-label flex items-center justify-between border-t border-black px-3 py-2 font-pixel text-[32px] font-semibold leading-none">
-            <span className="flex items-center gap-2"><span className="play-tri" aria-hidden>▶</span>PLAY</span>
-            <span className="hidden font-plex text-[11px] font-normal text-black/50 [@media(hover:hover)]:inline">↵ Enter</span>
-          </span>
-        </button>
-      </Window>
+      <div className="play-wrap relative">
+        <span aria-hidden className="play-ants" />
+        <span aria-hidden className="play-tag font-pixel">click me</span>
+        <Window title="PLAY.app — target acquired" className={`play-app max-w-[calc(100vw-48px)] ${big ? "w-[400px]" : "w-[300px]"}`}>
+          <button
+            ref={btn}
+            type="button"
+            onClick={go}
+            onPointerEnter={() => (hover.current = true)}
+            onPointerLeave={() => (hover.current = false)}
+            onFocus={() => (hover.current = true)}
+            onBlur={() => (hover.current = false)}
+            data-testid={testId}
+            aria-label="Play Stalk 10"
+            className="play-hit group block w-full bg-white p-3 outline-none"
+          >
+            <canvas ref={cv} aria-hidden className="block w-full [image-rendering:pixelated]" style={{ aspectRatio: `${W} / ${H}` }} />
+            {/* Mac "default button": thick ring, gap, then the button */}
+            <span className="play-ring mt-3 block">
+              <span className="play-cta flex items-center justify-center gap-3 font-pixel font-semibold leading-none">
+                <span className="play-word" data-text="PLAY">PLAY</span>
+                <span className="play-tri" aria-hidden>▶</span>
+              </span>
+            </span>
+            <span className="mt-2 flex justify-between font-plex text-[11px] text-black/55">
+              <span>3 rounds · 10 sec each</span>
+              <span className="hidden [@media(hover:hover)]:inline">or press ↵ Enter</span>
+            </span>
+          </button>
+        </Window>
+      </div>
 
       {launch && (
         <div aria-hidden className="pointer-events-none fixed inset-0 z-[80]">
