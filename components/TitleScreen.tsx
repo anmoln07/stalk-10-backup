@@ -190,8 +190,8 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
               <Scrawl text="psst!" className="left-[-4%] top-[-30%] text-[clamp(38px,5vw,84px)]" rotate={-12} delay={900} />
               <Strike className="bottom-[-10%] left-[2%] h-[0.32em] w-[96%] text-[clamp(64px,8.6vw,150px)]" delay={1500} />
             </h1>
-            <div className="mt-10 hidden lg:block">
-              <QR size={130} testId="qr" />
+            <div className="mt-8 hidden lg:block">
+              <QR size={210} testId="qr" />
             </div>
           </div>
 
@@ -309,7 +309,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
             {playBtn(true)}
             <span className="hidden text-[14px] text-white/50 sm:block">or press Enter</span>
           </div>
-          <div className="mt-16 hidden md:block"><QR size={170} dark /></div>
+          <div className="mt-16 hidden md:block"><QR size={240} dark /></div>
           {best !== null && (
             <p className="mt-10 text-[15px] text-white/70">Best on this device: <b className="text-neon">{best}/{TOTAL_QUESTIONS}</b></p>
           )}
