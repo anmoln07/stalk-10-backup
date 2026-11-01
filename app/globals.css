@@ -203,3 +203,13 @@ html.lenis,html.lenis body{height:auto}
 @media (prefers-reduced-motion:reduce){
   .ts-count{animation:none}.ts-drain{animation:none}.hold-hint,.hold-btn{animation:none!important}
 }
+
+/* ---------- Game screens v4 (questions, rounds, results): retro OS ---------- */
+.os-screen{background-color:#ededed;background-image:radial-gradient(rgba(0,0,0,.16) 1px,transparent 1.2px);background-size:10px 10px;color:#141414;color-scheme:light}
+.timer-os{transform-origin:left;background:repeating-linear-gradient(90deg,#000 0 10px,transparent 10px 13px);animation:drain linear forwards,timer-blink linear forwards}
+@keyframes timer-blink{0%,70%{opacity:1}72%{opacity:0.35}75%{opacity:1}78%{opacity:0.35}81%{opacity:1}84%{opacity:0.35}87%{opacity:1}90%{opacity:0.35}93%{opacity:1}96%{opacity:0.35}99%{opacity:1}}
+@keyframes osflash{from{opacity:.28}to{opacity:0}}
+.os-flash{animation:osflash .6s ease-out forwards}
+.again-btn{box-shadow:0 0 0 2px #0b0b0b,0 0 0 6px #fff,0 0 0 8px #0b0b0b;transition:transform .15s var(--spring),background .15s}
+.again-btn:hover,.again-btn:focus-visible{transform:scale(1.03);background:#1d1d1d}
+.again-btn:active{transform:scale(.97)}

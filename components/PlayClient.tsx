@@ -187,7 +187,7 @@ export default function PlayClient({ params, onTitle }: { params: GameParams; on
   }
 
   return (
-    <main {...common} data-testid="play" className="relative flex h-[100dvh] flex-col overflow-hidden px-4 pb-3 pt-3 sm:px-8 sm:pb-8 sm:pt-6">
+    <main {...common} data-testid="play" className="os-screen relative flex h-[100dvh] flex-col overflow-hidden px-4 pb-3 pt-3 font-inter sm:px-8 sm:pb-8 sm:pt-6">
       {phase === "ready" && <Ready count={Math.max(1, 3 - Math.floor(elapsed / 1000))} lookSeconds={params.lookSeconds} />}
       {phase === "between" && (
         <Between
@@ -205,7 +205,7 @@ export default function PlayClient({ params, onTitle }: { params: GameParams; on
 
 function EscHint() {
   return (
-    <p className="pointer-events-none fixed bottom-2 left-0 right-0 z-30 hidden text-center font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-600 [@media(pointer:fine)]:block">
+    <p className="pointer-events-none fixed bottom-2 left-0 right-0 z-30 hidden text-center font-plex text-[11px] text-black/50 [@media(pointer:fine)]:block">
       Esc = back to title
     </p>
   );
@@ -215,7 +215,7 @@ function RoundPips({ ri }: { ri: number }) {
   return (
     <div className="flex items-center justify-center gap-2" aria-hidden>
       {Array.from({ length: ROUNDS }, (_, i) => (
-        <span key={i} className={`h-2 w-10 rounded-full ${i < ri ? "bg-lime-400/50" : i === ri ? "bg-lime-400" : "bg-white/15"}`} />
+        <span key={i} className={`h-3 w-10 border-[1.5px] border-black ${i < ri ? "bg-black" : i === ri ? "bg-desk" : "bg-white"}`} />
       ))}
     </div>
   );
@@ -224,14 +224,16 @@ function RoundPips({ ri }: { ri: number }) {
 function Ready({ count, lookSeconds }: { count: number; lookSeconds: number }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center" data-testid="ready">
-      <RoundPips ri={0} />
-      <p className="mt-4 font-mono text-xs uppercase tracking-[0.3em] text-zinc-500 sm:text-sm">Round 1 / {ROUNDS} · {RULES.easy.label}</p>
-      <p key={count} className="pop-in mt-2 font-anton text-[44vw] leading-[0.85] text-lime-400 sm:text-[16rem]">
-        {count}
-      </p>
-      <p className="mt-6 max-w-sm text-lg leading-snug text-zinc-300 sm:text-xl">
-        A profile appears for <b className="text-fg">{lookSeconds} seconds</b>. Scroll, read, remember. 3 rounds, Easy to Hard.
-      </p>
+      <div className="os-win w-[min(420px,100%)]">
+        <div className="os-title"><span className="os-title-text">Stalk 10 · Round 1 / {ROUNDS} · {RULES.easy.label}</span></div>
+        <div className="os-body bg-white px-5 pb-6 pt-4">
+          <RoundPips ri={0} />
+          <p key={count} className="pop-in mt-2 font-pixel text-[38vw] font-semibold leading-[0.9] sm:text-[12rem]">{count}</p>
+          <p className="mx-auto max-w-sm text-[17px] leading-snug text-black/75 sm:text-lg">
+            A profile appears for <b className="text-black">{lookSeconds} seconds</b>. Scroll, read, remember. 3 rounds, Easy to Hard.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -242,27 +244,27 @@ function Between({ ri, last, total, count }: { ri: number; last: boolean[]; tota
   const got = last.filter(Boolean).length;
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center" data-testid="between" data-round={ri}>
-      <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-zinc-500 sm:text-xs">
-        Round {ri} done · <b className="text-fg">{got}/{QUESTIONS_PER_ROUND}</b> · total {total}/{TOTAL_QUESTIONS}
-      </p>
-      <div className="mt-3 flex gap-1.5" aria-hidden>
-        {last.map((r, i) => (
-          <span key={i} className={`grid h-6 w-6 place-items-center rounded-full font-mono text-[11px] font-black ${r ? "bg-lime-400 text-black" : "bg-white/10 text-zinc-400"}`}>
-            {r ? "✓" : "✕"}
-          </span>
-        ))}
+      <div className="os-win w-[min(520px,100%)]">
+        <div className="os-title"><span className="os-title-text">Round {ri} done · {got}/{QUESTIONS_PER_ROUND} · total {total}/{TOTAL_QUESTIONS}</span></div>
+        <div className="os-body bg-white px-5 pb-6 pt-4">
+          <div className="flex justify-center gap-1.5" aria-hidden>
+            {last.map((r, i) => (
+              <span key={i} className={`grid h-7 w-7 place-items-center border-[1.5px] border-black font-pixel text-[14px] ${r ? "bg-desk text-black" : "bg-black text-white"}`}>
+                {r ? "✓" : "✕"}
+              </span>
+            ))}
+          </div>
+          <h1 className="pop-in mt-5 font-inter text-[20vw] font-medium leading-[0.85] tracking-[-0.05em] sm:text-[8.5rem]">
+            Round {ri + 1}<span className="text-black/30">/{ROUNDS}</span>
+          </h1>
+          <p className={`mt-4 inline-block border-[1.5px] border-black px-3 py-0.5 font-pixel text-[18px] shadow-[2px_2px_0_#000] ${d === "hard" ? "bg-black text-white" : "bg-desk text-black"}`}>
+            {rule.label}
+          </p>
+          <p className="mx-auto mt-4 max-w-sm text-[17px] leading-snug text-black/75">{rule.blurb}</p>
+          <div className="mt-5"><RoundPips ri={ri} /></div>
+          <p className="mt-4 font-pixel text-[16px]">Look in {count}…</p>
+        </div>
       </div>
-      <h1 className="pop-in mt-8 font-black uppercase leading-[0.82] tracking-tighter">
-        <span className="block text-[22vw] sm:text-[11rem]">
-          Round {ri + 1}<span className="text-zinc-600">/{ROUNDS}</span>
-        </span>
-      </h1>
-      <p className={`mt-4 inline-block rounded-full px-4 py-1.5 font-mono text-sm font-bold uppercase tracking-[0.25em] ${d === "hard" ? "bg-red-500 text-white" : "bg-amber-400 text-black"}`}>
-        {rule.label}
-      </p>
-      <p className="mt-4 max-w-sm text-lg leading-snug text-zinc-300">{rule.blurb}</p>
-      <div className="mt-6"><RoundPips ri={ri} /></div>
-      <p className="mt-4 font-mono text-xs uppercase tracking-[0.3em] text-lime-400">Look in {count}…</p>
     </div>
   );
 }
@@ -274,22 +276,22 @@ function QuizScreen({ run, ri, qi, picked, onPick }: { run: Run; ri: number; qi:
   return (
     <div className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col" data-testid="quiz" data-q={qi} data-round={ri} data-kind={q.kind}>
       {verdict && (
-        <div key={`f${ri}-${qi}`} className={`flash pointer-events-none fixed inset-0 z-0 ${verdict === "right" ? "bg-lime-400" : "bg-red-500"}`} aria-hidden />
+        <div key={`f${ri}-${qi}`} className={`os-flash pointer-events-none fixed inset-0 z-0 ${verdict === "right" ? "bg-desk" : "bg-black"}`} aria-hidden />
       )}
-      <div className="relative z-10 flex items-center justify-between gap-3">
+      <div className="relative z-10 flex items-center justify-between gap-3 border-[1.5px] border-black bg-black px-2 py-1.5 text-white shadow-[3px_3px_0_rgba(0,0,0,.25)]">
         <div className="flex min-w-0 items-center gap-2.5">
-          <img src={pfpSrc(round.profile.avatar)} alt="" className="h-9 w-9 shrink-0 rounded-full border border-white/10 object-cover blur-[1.5px]" />
-          <p className="min-w-0 truncate font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 sm:text-xs">
-            <span className="text-lime-400">R{ri + 1}/{ROUNDS}</span> · @{round.profile.handle}
+          <img src={pfpSrc(round.profile.avatar)} alt="" className="h-7 w-7 shrink-0 border border-white/40 object-cover blur-[1.5px] grayscale" />
+          <p className="min-w-0 truncate font-pixel text-[13px] sm:text-[15px]">
+            Quiz.exe · <span className="text-desk">R{ri + 1}/{ROUNDS}</span> · @{round.profile.handle}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
           <div className="flex gap-1 sm:gap-1.5" aria-hidden>
             {round.questions.map((_, i) => (
-              <span key={i} className={`h-2 w-3 rounded-full sm:w-7 ${i < qi ? "bg-lime-400/60" : i === qi ? "bg-lime-400" : "bg-white/15"}`} />
+              <span key={i} className={`h-3 w-3 border border-white sm:w-6 ${i < qi ? "bg-white" : i === qi ? "bg-desk" : "bg-transparent"}`} />
             ))}
           </div>
-          <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-fg sm:text-sm" data-testid="progress">
+          <p className="font-pixel text-[14px] sm:text-[16px]" data-testid="progress">
             {qi + 1}/{round.questions.length}
           </p>
         </div>
@@ -299,10 +301,10 @@ function QuizScreen({ run, ri, qi, picked, onPick }: { run: Run; ri: number; qi:
       </div>
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <Question key={`${ri}-${qi}`} q={q} picked={picked} onPick={onPick} />
-        <p className="mt-3 h-6 text-center font-mono text-sm font-bold uppercase tracking-[0.2em]" aria-live="assertive" data-testid="verdict">
-          {verdict === "right" && <span className="text-lime-400">Spotted it!</span>}
-          {verdict === "wrong" && <span className="text-red-400">{q.decoys.includes(q.options[picked!]) ? "Decoy! " : "Nope: "}{q.answer}</span>}
-          {verdict === "timeout" && <span className="text-amber-400">Time&apos;s up: {q.answer}</span>}
+        <p className="mt-4 flex h-8 items-center justify-center font-pixel text-[17px]" aria-live="assertive" data-testid="verdict">
+          {verdict === "right" && <span className="pop-in border-[1.5px] border-black bg-desk px-3 py-0.5 shadow-[3px_3px_0_#000]">Spotted it!</span>}
+          {verdict === "wrong" && <span className="pop-in border-[1.5px] border-black bg-black px-3 py-0.5 text-white shadow-[3px_3px_0_#3ccf7a]">{q.decoys.includes(q.options[picked!]) ? "Decoy! " : "Nope: "}{q.answer}</span>}
+          {verdict === "timeout" && <span className="pop-in border-[1.5px] border-black bg-white px-3 py-0.5 shadow-[3px_3px_0_#000]">Time&apos;s up: {q.answer}</span>}
         </p>
       </div>
     </div>
