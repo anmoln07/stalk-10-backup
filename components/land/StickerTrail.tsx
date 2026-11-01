@@ -15,6 +15,8 @@ export default function StickerTrail() {
     if (!el) return;
     let lx = -999, ly = -999, i = Math.floor(Math.random() * STICKERS.length);
     const spawn = (x: number, y: number) => {
+      // Only on the hero: the landing page sets data-trail="off" once the footage starts growing.
+      if (document.documentElement.dataset.trail === "off") return;
       const d = Math.hypot(x - lx, y - ly);
       if (d < 64) return;
       lx = x; ly = y;
@@ -39,5 +41,5 @@ export default function StickerTrail() {
     };
   }, []);
 
-  return <div ref={layer} aria-hidden className="pointer-events-none fixed inset-0 z-40 overflow-hidden" />;
+  return <div ref={layer} aria-hidden className="trail pointer-events-none fixed inset-0 z-40 overflow-hidden" />;
 }

@@ -78,6 +78,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
         p.style.width = `${pw + (vw - pw) * e}px`;
         p.style.height = `${ph + (vh - ph) * e}px`;
         p.style.borderRadius = `${(pw / 2) * (1 - e)}px`;
+        document.documentElement.dataset.trail = g > 0.08 ? "off" : "on";
         const fade = 1 - clamp(g * 1.8);
         const push = ease(g);
         if (heroL.current) { heroL.current.style.opacity = `${fade}`; heroL.current.style.transform = `translateX(${-push * 12}vw)`; }

@@ -205,6 +205,8 @@ button:focus-visible{outline-color:#fff}
 /* Footer */
 .foot{clip-path:inset(8% 40% 70% 40% round 160px);will-change:clip-path}
 /* Sticker trail + loader */
+.trail{transition:opacity .25s}
+[data-trail=off] .trail{opacity:0}
 .sticker{position:absolute;transform:translate(-50%,-50%) rotate(var(--r)) scale(0);animation:stk 1.5s cubic-bezier(.2,.9,.3,1.2) forwards;user-select:none}
 @keyframes stk{0%{transform:translate(-50%,-50%) rotate(var(--r)) scale(0)}14%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1)}
   75%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1)}100%{transform:translate(-50%,-50%) rotate(var(--r)) scale(0)}}
