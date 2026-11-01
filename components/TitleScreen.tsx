@@ -39,6 +39,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
   const [active, setActive] = useState(0);
   const [hovering, setHovering] = useState(false);
   const [footIn, setFootIn] = useState(false);
+  const [statIn, setStatIn] = useState(false);
   const stage = useRef<HTMLElement>(null);
   const pill = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
@@ -49,6 +50,7 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
   const statement = useRef<HTMLDivElement>(null);
   const foot = useRef<HTMLElement>(null);
   const hoverRef = useRef(false);
+  const listOn = useRef(false);
   hoverRef.current = hovering;
 
   useEffect(() => setBest(getBest()), []);
@@ -86,6 +88,9 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
         if (heroHint.current) heroHint.current.style.opacity = `${1 - clamp(g * 4)}`;
         const lp = (s - G) / (LEND - G);
         const lo = clamp((s - G * 0.85) / (0.15 * vh)) * (1 - clamp(sh * 3));
+        const wasOn = listOn.current;
+        listOn.current = lo > 0.2;
+        if (listOn.current && !wasOn && video.current) { try { video.current.currentTime = FACTS[lastActive < 0 ? 0 : lastActive].t; } catch {} }
         if (list.current) {
           list.current.style.opacity = `${lo}`;
           list.current.style.pointerEvents = lo > 0.5 ? "auto" : "none";
@@ -97,10 +102,12 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
         }
       }
       // Marker redactions lift as each word crosses ~70% of the screen.
-      statement.current?.querySelectorAll<HTMLElement>("[data-redact]").forEach((w) => {
+      const ws = statement.current?.querySelectorAll<HTMLElement>("[data-redact]");
+      ws?.forEach((w) => {
         const top = w.getBoundingClientRect().top;
-        w.style.setProperty("--r", `${clamp((vh * 0.78 - top) / (vh * 0.22))}`);
+        w.style.setProperty("--r", `${clamp((vh * 0.8 - top) / (vh * 0.2))}`);
       });
+      if (ws?.length && ws[ws.length - 1].getBoundingClientRect().top < vh * 0.55) setStatIn(true);
       // Footer: a black pill that opens into the full section.
       const f = foot.current;
       if (f) {
@@ -122,12 +129,30 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
     };
   }, []);
 
-  // Jump the footage to the moment the tracker locks onto the active fact.
+  // While the list is up, the footage stays on the active fact: it jumps to the moment the tracker locks on
+  // and replays that ~2 s clip, so the picture always matches the highlighted line.
+  const activeRef = useRef(0);
+  activeRef.current = active;
   useEffect(() => {
     const v = video.current;
     if (!v || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    try { v.currentTime = FACTS[active].t; } catch {}
+    const seek = () => { try { v.currentTime = FACTS[activeRef.current].t; void v.play().catch(() => {}); } catch {} };
+    if (listOn.current) {
+      if (v.readyState >= 1) seek();
+      else v.addEventListener("loadedmetadata", seek, { once: true });
+    }
   }, [active]);
+  useEffect(() => {
+    const v = video.current;
+    if (!v) return;
+    const hold = () => {
+      if (!listOn.current) return;
+      const t = FACTS[activeRef.current].t;
+      if (v.currentTime < t - 0.05 || v.currentTime > t + 1.6) { try { v.currentTime = t; } catch {} }
+    };
+    v.addEventListener("timeupdate", hold);
+    return () => v.removeEventListener("timeupdate", hold);
+  }, []);
 
   const playBtn = (big = false, testId?: string) => (
     <button
@@ -229,26 +254,44 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
       </section>
 
       {/* ---------- Statement with marker redactions ---------- */}
-      <section id="how" className="relative px-5 pb-[18vh] pt-[14vh] text-center sm:px-8">
-        <div ref={statement} className="mx-auto max-w-[1100px] text-[clamp(34px,5.2vw,78px)] font-extrabold leading-[1.02] tracking-[-0.055em]">
-          {STATEMENT.split(/(\[[^\]]+\])/).map((part, i) => {
+      <section id="how" className="relative px-5 pb-[16vh] pt-[16vh] sm:px-8">
+        <p className="mb-8 text-center text-[13px] font-bold uppercase tracking-[0.14em] text-neon-deep sm:text-[14px]">The catch</p>
+        <div ref={statement} className="mx-auto max-w-[920px] text-balance text-center text-[clamp(30px,4.1vw,60px)] font-extrabold leading-[1.1] tracking-[-0.05em]">
+          {STATEMENT.split(/(\[[^\]]+\])/).map((part, i, all) => {
             const m = part.match(/^\[(.+)\]$/);
-            if (!m) return <span key={i}>{part}</span>;
+            // Punctuation right after a redacted word stays on its line ("Pune," never wraps as "Pune / ,").
+            if (!m) return <span key={i}>{all[i - 1]?.startsWith("[") ? part.replace(/^[.,?!]+/, "") : part}</span>;
+            const tail = all[i + 1]?.match(/^[.,?!]+/)?.[0] ?? "";
             return (
-              <span key={i} data-redact className="redact relative inline-block">
-                {m[1]}
-                <span aria-hidden className="blot" />
-                {m[1] === "Goa" && <Scrawl text="GOA!!" className="scrawl-r left-[-10%] top-[-12%] text-[0.62em]" rotate={-10} on={false} />}
-                {m[1] === "fifteen times" && <Scrawl text="easy." className="scrawl-r left-[40%] top-[-30%] text-[0.55em]" rotate={-7} on={false} />}
+              <span key={i} className="whitespace-nowrap">
+                <span data-redact className="redact relative inline-block">
+                  <span aria-hidden className="mark" />
+                  <span className="relative">{m[1]}</span>
+                  <span aria-hidden className="blot" />
+                </span>
+                {tail}
               </span>
             );
           })}
         </div>
-        <p className="mx-auto mt-14 max-w-[520px] text-[16px] leading-[1.35] tracking-[-0.01em] text-black/80 sm:text-[17px]">
-          Three rounds, Easy → Medium → Hard. Each one shows a made-up profile for ten seconds, then five questions, seven seconds each.
-          Watch out for <b>decoys</b> (a friend&apos;s dog when we ask about her cat) and <b>look-alikes</b> (Biscotti vs Biscuit).
-          Everyone in this game is fictional.
-        </p>
+        <div className="relative mx-auto mt-6 flex max-w-[920px] justify-end pr-[6%]">
+          <span className="relative h-[60px] w-[200px]"><Scrawl text="easy, right?" on={statIn} className="right-0 top-2 text-[clamp(22px,2.4vw,34px)]" rotate={-6} /></span>
+        </div>
+
+        <ol className="mx-auto mt-[10vh] grid max-w-[1100px] gap-8 border-t border-black/15 pt-8 sm:grid-cols-3 sm:gap-6">
+          {[
+            ["01", "Look", "A made-up profile shows for ten seconds. Scroll as fast as you like."],
+            ["02", "Answer", "Five questions about it, seven seconds each. Three rounds, Easy to Hard."],
+            ["03", "Don't get fooled", "Decoys (her friend's dog, not her cat) and look-alikes (Biscotti vs Biscuit)."],
+          ].map(([n, h, t]) => (
+            <li key={n} className="text-left">
+              <span className="text-[13px] font-bold tabular-nums text-black/40">{n}</span>
+              <h3 className="mt-2 text-[clamp(26px,2.6vw,36px)] font-extrabold leading-none tracking-[-0.045em]">{h}</h3>
+              <p className="mt-3 max-w-[300px] text-[16px] leading-[1.35] text-black/70">{t}</p>
+            </li>
+          ))}
+        </ol>
+        <p className="mx-auto mt-10 max-w-[1100px] text-[13px] text-black/45">Everyone in this game is fictional.</p>
       </section>
 
       {/* ---------- Footer: black pill opens into the Play section ---------- */}

@@ -16,7 +16,7 @@ export default function StickerTrail() {
     let lx = -999, ly = -999, i = Math.floor(Math.random() * STICKERS.length);
     const spawn = (x: number, y: number) => {
       // Only on the hero: the landing page sets data-trail="off" once the footage starts growing.
-      if (document.documentElement.dataset.trail === "off") return;
+      if (document.documentElement.dataset.trail === "off") { el.replaceChildren(); return; }
       const d = Math.hypot(x - lx, y - ly);
       if (d < 64) return;
       lx = x; ly = y;
