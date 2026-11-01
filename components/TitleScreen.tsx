@@ -1,19 +1,56 @@
 "use client";
-import { useEffect, useState } from "react";
+/* eslint-disable @next/next/no-img-element */
+import { useEffect, useRef, useState } from "react";
 import { getBest } from "@/lib/storage";
-import SiteNav, { pill } from "./SiteNav";
-import Magnetic from "./Magnetic";
 import QR from "./QR";
-import DemoLoop from "./DemoLoop";
-import Dot from "./Dot";
-import Tapes from "./Tapes";
 import { useKeys } from "@/lib/hooks";
 import type { GameParams } from "@/lib/params";
 import { TOTAL_QUESTIONS } from "@/content/rules";
+import Scrawl, { Loop, Strike } from "./land/Scrawl";
+import Doodle from "./land/Doodles";
+import StickerTrail from "./land/StickerTrail";
+import Loader from "./land/Loader";
 
-// Same cover-sheet layout as SOCIALTRACE's hero: centred title, crop marks, file microtype, scan line.
+/**
+ * Landing page, after artemartemartem.com: white page, heavy black type, neon-green marker scrawls,
+ * a pill of "surveillance" footage that grows to full screen on scroll, a hover list over it,
+ * a statement with marker-redacted words that lift as you scroll, and a black footer with the Play button + QR.
+ */
+
+// What you'll have to remember, each tied to the moment in /video/feed.mp4 where the tracker locks on.
+const FACTS = [
+  { text: "her cat's name", scrawl: "Biscuit?", t: 0.4 },
+  { text: "where she lives", scrawl: "Pune!", t: 0.8 },
+  { text: "what she's drinking", scrawl: "×3", t: 2.1 },
+  { text: "where she's flying", scrawl: "Goa", t: 3.7 },
+  { text: "her new shoes", scrawl: "yellow?", t: 8.5 },
+  { text: "what's just noise", scrawl: "decoy!", t: 10.4 },
+];
+
+// Statement copy. [x] = marker-redacted until you scroll to it.
+const STATEMENT =
+  "You had ten seconds. Her cat is [Biscuit], not [Cookie]. She lives in [Pune], drinks [iced lattes] and flies to [Goa] on [the 15th]. Got all that? Now do it [fifteen times].";
+
+const clamp = (v: number) => Math.min(1, Math.max(0, v));
+const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
 export default function TitleScreen({ params, onPlay }: { params: GameParams; onPlay: () => void }) {
   const [best, setBest] = useState<number | null>(null);
+  const [active, setActive] = useState(0);
+  const [hovering, setHovering] = useState(false);
+  const [footIn, setFootIn] = useState(false);
+  const stage = useRef<HTMLElement>(null);
+  const pill = useRef<HTMLDivElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  const heroL = useRef<HTMLDivElement>(null);
+  const heroR = useRef<HTMLDivElement>(null);
+  const heroHint = useRef<HTMLDivElement>(null);
+  const list = useRef<HTMLDivElement>(null);
+  const statement = useRef<HTMLDivElement>(null);
+  const foot = useRef<HTMLElement>(null);
+  const hoverRef = useRef(false);
+  hoverRef.current = hovering;
+
   useEffect(() => setBest(getBest()), []);
   useKeys((e) => {
     if (e.key === "Enter") {
@@ -21,63 +58,229 @@ export default function TitleScreen({ params, onPlay }: { params: GameParams; on
       onPlay();
     }
   });
-  const mark = "absolute h-6 w-6 border-zinc-600";
+
+  // One scroll loop drives everything; it writes styles directly so React doesn't re-render per frame.
+  useEffect(() => {
+    let raf = 0;
+    let lastActive = -1;
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const run = () => {
+      raf = 0;
+      const vh = window.innerHeight, vw = document.documentElement.clientWidth;
+      const st = stage.current, p = pill.current;
+      if (st && p) {
+        const s = -st.getBoundingClientRect().top;
+        const G = 0.8 * vh, LEND = 1.9 * vh, END = 2.6 * vh;
+        const g = clamp(s / G), sh = clamp((s - LEND) / (END - LEND));
+        const e = ease(g) * (1 - ease(sh));
+        const small = vw < 768;
+        const pw = small ? 148 : 150, ph = small ? 240 : 250;
+        p.style.width = `${pw + (vw - pw) * e}px`;
+        p.style.height = `${ph + (vh - ph) * e}px`;
+        p.style.borderRadius = `${(pw / 2) * (1 - e)}px`;
+        const fade = 1 - clamp(g * 1.8);
+        const push = ease(g);
+        if (heroL.current) { heroL.current.style.opacity = `${fade}`; heroL.current.style.transform = `translateX(${-push * 12}vw)`; }
+        if (heroR.current) { heroR.current.style.opacity = `${fade}`; heroR.current.style.transform = `translateX(${push * 12}vw)`; }
+        if (heroHint.current) heroHint.current.style.opacity = `${1 - clamp(g * 4)}`;
+        const lp = (s - G) / (LEND - G);
+        const lo = clamp((s - G * 0.85) / (0.15 * vh)) * (1 - clamp(sh * 3));
+        if (list.current) {
+          list.current.style.opacity = `${lo}`;
+          list.current.style.pointerEvents = lo > 0.5 ? "auto" : "none";
+          list.current.style.transform = `translateY(${(1 - clamp(lp * 3 + 0.3)) * 6}vh)`;
+        }
+        if (!hoverRef.current && lp >= 0 && lp <= 1) {
+          const i = Math.min(FACTS.length - 1, Math.floor(lp * FACTS.length));
+          if (i !== lastActive) { lastActive = i; setActive(i); }
+        }
+      }
+      // Marker redactions lift as each word crosses ~70% of the screen.
+      statement.current?.querySelectorAll<HTMLElement>("[data-redact]").forEach((w) => {
+        const top = w.getBoundingClientRect().top;
+        w.style.setProperty("--r", `${clamp((vh * 0.78 - top) / (vh * 0.22))}`);
+      });
+      // Footer: a black pill that opens into the full section.
+      const f = foot.current;
+      if (f) {
+        const top = f.getBoundingClientRect().top;
+        const k = ease(clamp((vh - top) / (vh * 0.75)));
+        f.style.clipPath = `inset(${(1 - k) * 8}% ${(1 - k) * 40}% ${(1 - k) * 70}% ${(1 - k) * 40}% round ${(1 - k) * 160 + 0}px)`;
+        if (k > 0.85) setFootIn(true);
+      }
+      if (still && video.current && !video.current.paused) video.current.pause();
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(run); };
+    run();
+    window.addEventListener("scroll", on, { passive: true });
+    window.addEventListener("resize", on);
+    return () => {
+      window.removeEventListener("scroll", on);
+      window.removeEventListener("resize", on);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  // Jump the footage to the moment the tracker locks onto the active fact.
+  useEffect(() => {
+    const v = video.current;
+    if (!v || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    try { v.currentTime = FACTS[active].t; } catch {}
+  }, [active]);
+
+  const playBtn = (big = false, testId?: string) => (
+    <button
+      type="button"
+      onClick={onPlay}
+      data-testid={testId}
+      className={`play-btn group relative inline-flex items-center justify-center gap-3 rounded-full font-bold tracking-[-0.02em] outline-none ${
+        big ? "h-[76px] bg-neon px-12 text-[28px] text-black" : "h-[58px] bg-black px-9 text-[20px] text-white"
+      }`}
+    >
+      <span className="relative z-10">Play</span>
+      <svg width={big ? 28 : 22} height={big ? 28 : 22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="relative z-10 transition-transform duration-300 group-hover:translate-x-1">
+        <path d="M5 12h14M12 5l7 7-7 7" />
+      </svg>
+      <Loop className={`play-loop ${big ? "text-white" : ""}`} />
+    </button>
+  );
 
   return (
-    <main className="relative min-h-[100svh] overflow-hidden bg-ink text-white selection:bg-lime-400 selection:text-black" data-testid="title-screen">
-      {!params.kiosk && <SiteNav right={best ? <span className={pill}>Best <b className="text-lime-400">{best}/{TOTAL_QUESTIONS}</b></span> : null} />}
+    <main className="land relative bg-white font-sans text-black selection:bg-neon selection:text-black" data-testid="title-screen">
+      <Loader skip={params.kiosk} />
+      <StickerTrail />
 
-      <section className="relative flex min-h-[calc(100svh-5rem)] w-full flex-col items-center justify-center px-4 pb-6 pt-24 sm:min-h-[calc(100svh-7rem)] sm:pt-32">
-        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0d_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0d_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
-        <div aria-hidden className="scan pointer-events-none absolute inset-x-0 top-0 h-px bg-lime-400/70 shadow-[0_0_24px_4px_rgba(163,230,53,.35)]" />
-        <span aria-hidden className={`${mark} left-4 top-20 border-l border-t sm:left-8 sm:top-24`} />
-        <span aria-hidden className={`${mark} right-4 top-20 border-r border-t sm:right-8 sm:top-24`} />
-        <span aria-hidden className={`${mark} bottom-2 left-4 border-b border-l sm:left-8`} />
-        <span aria-hidden className={`${mark} bottom-2 right-4 border-b border-r sm:right-8`} />
+      {!params.kiosk && (
+        <nav className="fixed inset-x-0 top-0 z-50 flex items-start justify-between px-3 pt-2 text-[17px] font-semibold tracking-[-0.03em] text-white mix-blend-difference sm:px-4 sm:text-[22px]">
+          <a href="#how" className="nav-link">how it works</a>
+          <span className="absolute left-1/2 -translate-x-1/2">stalk 10</span>
+          <button type="button" onClick={onPlay} className="nav-link">play</button>
+        </nav>
+      )}
 
-        {/* file microtype: in the flow on phones (big system text can't collide with the title), pinned on larger screens */}
-        <div className="relative z-10 mb-8 flex w-full items-center justify-between gap-3 px-2 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 sm:absolute sm:inset-x-12 sm:top-[7.5rem] sm:mb-0 sm:w-auto sm:px-0 sm:text-xs sm:tracking-[0.25em]">
-          <span>Cipher club<span className="hidden sm:inline"> · stall game</span></span>
-          <span className="flex shrink-0 items-center gap-2"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lime-400" />3 rounds · 10 sec look</span>
-        </div>
+      {/* ---------- Stage: hero → pill grows to full screen → list over the footage → pill shrinks back ---------- */}
+      <section ref={stage} className="relative" style={{ height: "calc(100svh + 260vh)" }}>
+        <div className="sticky top-0 h-[100svh] overflow-hidden">
+          {/* Left: the title + QR */}
+          <div ref={heroL} className="absolute inset-x-0 top-[13%] flex flex-col items-start px-5 sm:px-8 md:inset-x-auto md:left-0 md:top-0 md:h-full md:w-[38%] md:items-center md:justify-center md:px-6">
+            <h1 className="relative select-none font-extrabold leading-[0.86] tracking-[-0.06em]" aria-label="Stalk 10">
+              <span className="block text-[clamp(30px,4.2vw,64px)]">Psst,</span>
+              <span className="block whitespace-nowrap text-[clamp(64px,8.6vw,150px)]">Stalk 10</span>
+              <Scrawl text="psst!" className="left-[-4%] top-[-30%] text-[clamp(38px,5vw,84px)]" rotate={-12} delay={900} />
+              <Strike className="bottom-[-10%] left-[2%] h-[0.32em] w-[96%] text-[clamp(64px,8.6vw,150px)]" delay={1500} />
+            </h1>
+            <div className="mt-10 hidden lg:block">
+              <QR size={130} testId="qr" />
+            </div>
+          </div>
 
-        <div className="rise-in relative z-10 text-center">
-          <h1 className="select-none text-[24vw] font-black uppercase leading-[0.82] tracking-tighter sm:text-[13vw] lg:text-[8.5vw] 2xl:text-[130px]" aria-label="Stalk 10">
-            Stalk<br /><span className="bg-gradient-to-b from-white to-zinc-600 bg-clip-text text-transparent">10</span>
-          </h1>
-          <p className="mx-auto mt-7 max-w-2xl font-mono text-[13px] uppercase leading-relaxed tracking-[0.18em] text-zinc-400 sm:text-base sm:tracking-widest">
-            <span className="block sm:inline">Look for 10 seconds.</span>{" "}
-            <span className="block sm:inline">
-              <span className="relative inline-block"><span className="text-white">Remember</span>
-                <span aria-hidden className="draw-line absolute inset-x-0 -bottom-1 h-[3px] bg-lime-400" /></span> what you saw.</span>
-          </p>
-          <div className="mt-10 flex flex-col items-center gap-4">
-            <Magnetic>
-              <button
-                type="button"
-                onClick={onPlay}
-                data-testid="play"
-                className="group inline-flex min-h-[56px] items-center gap-3 rounded-full bg-lime-400 px-9 py-5 font-mono text-lg font-bold uppercase text-black outline-none transition-colors duration-200 hover:bg-white focus-visible:bg-white"
-              >
-                Play
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="transition-transform group-hover:translate-x-1"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-              </button>
-            </Magnetic>
-            <span className="hidden font-mono text-xs uppercase tracking-widest text-zinc-500 sm:inline">[ or press enter ]</span>
+          {/* Centre: the pill of footage */}
+          <div ref={pill} className="pill absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-black" style={{ width: 150, height: 250, borderRadius: 75 }}>
+            <video ref={video} className="h-full w-full object-cover" src="/video/feed.mp4" poster="/video/feed-poster.jpg" autoPlay muted loop playsInline preload="auto" aria-hidden />
+            <div aria-hidden className="crt pointer-events-none absolute inset-0" />
+          </div>
+
+          {/* Right: eye doodle, blurb, Play */}
+          <div ref={heroR} className="absolute inset-x-0 bottom-[5%] flex flex-col items-center px-6 text-center md:inset-x-auto md:bottom-auto md:right-0 md:top-0 md:h-full md:w-[38%] md:justify-center md:px-10">
+            <Doodle name="eye" className="!relative hidden h-20 w-20 md:block" delay={600} />
+            <p className="mt-3 max-w-[330px] text-[16px] leading-[1.3] tracking-[-0.01em] sm:text-[18px]">
+              A memory game about made-up people. Look at a profile for <b className="font-bold">10 seconds</b>, then answer what you saw.
+              Three rounds, {TOTAL_QUESTIONS} questions, plenty of decoys.
+            </p>
+            <div className="mt-6 flex flex-col items-center gap-2">
+              {playBtn(false, "play")}
+              <span className="hidden text-[13px] text-black/45 sm:block">or press Enter</span>
+            </div>
+          </div>
+
+          <div ref={heroHint} aria-hidden className="absolute bottom-3 left-1/2 hidden -translate-x-1/2 items-center gap-1.5 text-[12px] text-black/40 md:flex">
+            <span className="inline-block h-[14px] w-[9px] rounded-full border border-current" /> scroll
+          </div>
+
+          {/* The hover list over the full-screen footage */}
+          <div ref={list} className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/80 via-black/50 to-transparent px-3 pb-6 pt-24 opacity-0 sm:px-4 sm:pb-8" style={{ pointerEvents: "none" }}>
+            <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-neon sm:text-[15px]">What you&apos;ll have to remember</p>
+            <ul onMouseLeave={() => setHovering(false)}>
+              {FACTS.map((f, i) => (
+                <li key={f.text} className="relative w-fit">
+                  <button
+                    type="button"
+                    onMouseEnter={() => { setHovering(true); setActive(i); }}
+                    onFocus={() => setActive(i)}
+                    onClick={() => setActive(i)}
+                    className={`fact block text-left text-[clamp(34px,6.2vw,100px)] font-extrabold leading-[0.9] tracking-[-0.055em] transition-colors duration-200 ${i === active ? "text-white" : "text-white/35"}`}
+                  >
+                    {f.text}
+                  </button>
+                  {i === active && (
+                    <>
+                      <Scrawl key={`s${i}`} text={f.scrawl} className="left-[30%] top-[-18%] text-[clamp(30px,4.6vw,76px)]" rotate={-9} />
+                      <span key={`t${i}`} className="tag absolute -right-3 top-1/2 translate-x-full -translate-y-1/2 whitespace-nowrap bg-white px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-black">
+                        seen at 0:{String(Math.round(f.t)).padStart(2, "0")}
+                      </span>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-
-        <div className="rise-in relative z-10 mt-14 w-full max-w-md lg:mt-10 [animation-delay:150ms]">
-          <div className="pointer-events-none absolute -left-2 -top-9 z-10 flex items-center gap-2">
-            <Dot size={44} animated />
-            <span className="rounded-full rounded-bl-sm bg-paper px-3 py-1.5 text-[13px] font-semibold text-zinc-900 shadow-[3px_3px_0_#a3e635]">Blink and it&apos;s gone!</span>
-          </div>
-          <DemoLoop />
-        </div>
-
-        <div className="absolute bottom-6 right-8 z-10 hidden xl:block"><QR /></div>
       </section>
-      <Tapes />
+
+      {/* ---------- Statement with marker redactions ---------- */}
+      <section id="how" className="relative px-5 pb-[18vh] pt-[14vh] text-center sm:px-8">
+        <div ref={statement} className="mx-auto max-w-[1100px] text-[clamp(34px,5.2vw,78px)] font-extrabold leading-[1.02] tracking-[-0.055em]">
+          {STATEMENT.split(/(\[[^\]]+\])/).map((part, i) => {
+            const m = part.match(/^\[(.+)\]$/);
+            if (!m) return <span key={i}>{part}</span>;
+            return (
+              <span key={i} data-redact className="redact relative inline-block">
+                {m[1]}
+                <span aria-hidden className="blot" />
+                {m[1] === "Goa" && <Scrawl text="GOA!!" className="scrawl-r left-[-10%] top-[-12%] text-[0.62em]" rotate={-10} on={false} />}
+                {m[1] === "fifteen times" && <Scrawl text="easy." className="scrawl-r left-[40%] top-[-30%] text-[0.55em]" rotate={-7} on={false} />}
+              </span>
+            );
+          })}
+        </div>
+        <p className="mx-auto mt-14 max-w-[520px] text-[16px] leading-[1.35] tracking-[-0.01em] text-black/80 sm:text-[17px]">
+          Three rounds, Easy → Medium → Hard. Each one shows a made-up profile for ten seconds, then five questions, seven seconds each.
+          Watch out for <b>decoys</b> (a friend&apos;s dog when we ask about her cat) and <b>look-alikes</b> (Biscotti vs Biscuit).
+          Everyone in this game is fictional.
+        </p>
+      </section>
+
+      {/* ---------- Footer: black pill opens into the Play section ---------- */}
+      <footer ref={foot} className="foot relative overflow-hidden bg-black px-5 pb-8 pt-44 text-white sm:px-8 sm:pt-28">
+        <Doodle name="glass" on={footIn} className="left-[4%] top-[3%] h-20 w-20 sm:top-[10%] sm:h-36 sm:w-36" />
+        <Doodle name="cat" on={footIn} delay={150} className="right-[6%] top-[3%] h-20 w-20 sm:top-[8%] sm:h-32 sm:w-32" />
+        <Doodle name="phone" on={footIn} delay={300} className="bottom-[22%] left-[7%] hidden h-32 w-32 md:block" />
+        <Doodle name="at" on={footIn} delay={450} className="bottom-[30%] right-[9%] hidden h-24 w-24 md:block" />
+        <Doodle name="smile" on={footIn} delay={600} className="left-[30%] top-[6%] hidden h-16 w-16 lg:block" />
+        <Doodle name="q" on={footIn} delay={750} className="right-[30%] top-[14%] hidden h-16 w-16 lg:block" />
+        <Doodle name="heart" on={footIn} delay={900} className="bottom-[12%] left-[30%] hidden h-14 w-14 lg:block" />
+        <Doodle name="star" on={footIn} delay={1050} className="bottom-[14%] right-[28%] hidden h-14 w-14 lg:block" />
+
+        <div className="relative z-10 mx-auto flex max-w-[1100px] flex-col items-center text-center">
+          <h2 className="relative text-[clamp(52px,8.4vw,140px)] font-extrabold leading-[0.88] tracking-[-0.06em]">
+            Ready to<br />stalk?
+            <Scrawl text="now!" on={footIn} className="right-[-14%] top-[-16%] text-[0.36em]" rotate={-10} delay={300} />
+          </h2>
+          <div className="mt-12 flex flex-col items-center gap-3">
+            {playBtn(true)}
+            <span className="hidden text-[14px] text-white/50 sm:block">or press Enter</span>
+          </div>
+          <div className="mt-16 hidden md:block"><QR size={170} dark /></div>
+          {best !== null && (
+            <p className="mt-10 text-[15px] text-white/70">Best on this device: <b className="text-neon">{best}/{TOTAL_QUESTIONS}</b></p>
+          )}
+        </div>
+        <div className="relative z-10 mt-20 flex flex-col items-center justify-between gap-2 text-[12px] text-white/45 sm:flex-row">
+          <span>A Cipher club stall game</span>
+          <span>Illustrations: <a className="underline underline-offset-2 hover:text-white" href="https://kitbitz.art/" target="_blank" rel="noreferrer">Kitbitz</a> (CC0)</span>
+          <span>Everyone in this game is fictional</span>
+        </div>
+      </footer>
     </main>
   );
 }
